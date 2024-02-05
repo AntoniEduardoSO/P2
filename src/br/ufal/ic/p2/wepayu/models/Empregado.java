@@ -1,6 +1,6 @@
 package br.ufal.ic.p2.wepayu.models;
 
-import br.ufal.ic.p2.wepayu.Exception.*;
+import br.ufal.ic.p2.wepayu.Exception.VerificarErros.*;
 
 public class Empregado {
     private String id;
@@ -25,7 +25,7 @@ public class Empregado {
         System.out.println(id);
     }
 
-    public String getAtributo(String atributo){
+    public String getAtributo(String atributo) throws  AtributoNaoExisteException {
         switch (atributo){
             case "nome":
                 return this.getNome();
@@ -47,7 +47,7 @@ public class Empregado {
 
 
             default:
-                return this.getNome();
+                throw new AtributoNaoExisteException();
         }
     }
 

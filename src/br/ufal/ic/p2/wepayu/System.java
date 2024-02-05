@@ -31,13 +31,14 @@ public class System {
     public String setEmpregado(String nome, String endereco, String tipo, String salario) throws ValidacaoException {
         try {
             verificarErrosEmpregado(nome, endereco, tipo, salario);
+            verificarErrosNumericos(salario);
 
             String id = UUID.randomUUID().toString();
             Empregado empregado =  new Empregado(nome, endereco, tipo, salario);
 
             this.empregados.put(id, empregado);
             return id;
-        } catch (AtributoTipoNaoValido | AtributoNomeNuloException | AtributoEnderecoNuloException | AtributoSalarioNuloException | AtributoSalarioNaoNegativoException e) {
+        } catch (AtributoNumericoNaoNumericoException | AtributoNuloException | AtributoTipoNaoValido |  AtributoNumericoNegativoException | AtributoTipoNaoAplicavelException e) {
             throw new ValidacaoException(e.getMessage());
         }
     }
@@ -45,7 +46,7 @@ public class System {
     public String setEmpregado(String nome, String endereco, String tipo, String salario, String comissao) throws ValidacaoException {
         try {
             verificarErrosEmpregado(nome, endereco, tipo, salario, comissao);
-            verificarErrosSalario(salario);
+            verificarErrosNumericos(salario, comissao);
 
             String id = UUID.randomUUID().toString();
             Empregado empregado =  new Empregado(nome, endereco, tipo, salario);
@@ -53,7 +54,7 @@ public class System {
 
             this.empregados.put(id, empregado);
             return id;
-        } catch (AtributoTipoNaoAplicavel | AtributoTipoNaoValido | AtributoNomeNuloException | AtributoComissaoNulaException | AtributoEnderecoNuloException | AtributoSalarioNuloException | AtributoSalarioNaoNegativoException | AtributoComissaoNaoNegativo e) {
+        } catch (AtributoNumericoNaoNumericoException | AtributoNumericoNegativoException | AtributoNuloException | AtributoTipoNaoValido |  AtributoTipoNaoAplicavelException e) {
             throw new ValidacaoException(e.getMessage());
         }
     }
@@ -72,63 +73,74 @@ public class System {
         return this.empregados.get(id);
     }
 
-    public String getAtributoEmpregado(String id, String atributo) throws EmpregadoNaoExisteException, AtributoNaoExisteException, AtributoNomeNuloException,IdEmpregadoNuloException{
+    public String getAtributoEmpregado(String id, String atributo) throws EmpregadoNaoExisteException, AtributoNaoExisteException, IdEmpregadoNuloException{
         Empregado empregado = getEmpregado(id);
         return empregado.getAtributo(atributo);
     }
 
 
-    public void verificarErrosEmpregado(String nome, String endereco, String tipo, String salario) throws AtributoTipoNaoValido, AtributoNomeNuloException, AtributoEnderecoNuloException, AtributoSalarioNuloException, AtributoSalarioNaoNegativoException {
+    public void verificarErrosEmpregado(String nome, String endereco, String tipo, String salario) throws AtributoNuloException, AtributoTipoNaoValido, AtributoTipoNaoAplicavelException {
 
         if(nome.isEmpty()){
-            throw new AtributoNomeNuloException();
+            throw new AtributoNuloException("Nome");
         }
 
-//        else if(tipo != "horista)
-
         else if(endereco.isEmpty()){
-            throw new AtributoEnderecoNuloException();
+            throw new AtributoNuloException("Endereco");
         }
 
         else if(salario.isEmpty()){
-            throw new AtributoSalarioNuloException();
+            throw new AtributoNuloException("Salario");
         }
 
-        else if(salario.contains("-")){
-            throw new AtributoSalarioNaoNegativoException();
+        else if(tipo.equals("abc")){
+            throw new AtributoTipoNaoValido();
+        }
+
+        else if(tipo.equals("comissionado")){
+            throw new AtributoTipoNaoAplicavelException();
+        }
+
+
+
+    }
+
+    public void verificarErrosEmpregado(String nome, String endereco, String tipo, String salario, String comissao) throws AtributoNuloException, AtributoTipoNaoValido,  AtributoTipoNaoAplicavelException {
+
+        if(nome.isEmpty()){
+            throw new AtributoNuloException("Nome");
+        }
+
+        else if(endereco.isEmpty()){
+            throw new AtributoNuloException("Endereco");
+        }
+
+        else if(salario.isEmpty()){
+            throw new AtributoNuloException("Salario");
+        }
+
+
+        else if(comissao.isEmpty()){
+            throw new AtributoNuloException("Comissao");
+        }
+
+        else if(!tipo.equals("comissionado")){
+            throw new AtributoTipoNaoAplicavelException();
         }
 
 
     }
 
-    public void verificarErrosEmpregado(String nome, String endereco, String tipo, String salario, String comissao) throws AtributoTipoNaoAplicavel, AtributoTipoNaoValido, AtributoNomeNuloException, AtributoEnderecoNuloException, AtributoSalarioNuloException, AtributoSalarioNaoNegativoException, AtributoComissaoNulaException, AtributoComissaoNaoNegativo {
+    public void verificarErrosNumericos(String salario) throws  AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException{
+        Printar print = new Printar();
 
-        if(nome.isEmpty()){
-            throw new AtributoNomeNuloException();
+
+        if(salario.contains("-")){
+            throw new AtributoNumericoNegativoException("Salario");
         }
 
-        else if(endereco.isEmpty()){
-            throw new AtributoEnderecoNuloException();
-        }
-
-        else if(salario.isEmpty()){
-            throw new AtributoSalarioNuloException();
-        }
-
-        else if(salario.contains("-")){
-            throw new AtributoSalarioNaoNegativoException();
-        }
-
-        else if(comissao.contains(("-"))){
-            throw new AtributoComissaoNaoNegativo();
-        }
-
-        else if(comissao.isEmpty()){
-            throw new AtributoComissaoNulaException();
-        }
-
-        else if(tipo != "comissionado" ){
-            throw new AtributoTipoNaoAplicavel();
+        else if (salario.matches(".*[a-zA-Z].*")) {
+            throw new AtributoNumericoNaoNumericoException("Salario");
         }
 
         else if(!salario.contains(",")){
@@ -138,8 +150,23 @@ public class System {
 
     }
 
-    public void verificarErrosSalario(String salario){
-        if(!salario.contains(",")){
+
+    public void verificarErrosNumericos(String salario, String comissao) throws  AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException{
+        Printar print = new Printar();
+
+        if(comissao.contains("-")){
+            throw new AtributoNumericoNegativoException("Comissao");
+        }
+
+        else if(salario.contains("-")){
+            throw new AtributoNumericoNegativoException("Salario");
+        }
+
+        else if(comissao.matches(".*[a-zA-Z].*")){
+            throw new AtributoNumericoNaoNumericoException("Comissao");
+        }
+
+        else if(!salario.contains(",")){
             salario += ",00";
         }
     }
