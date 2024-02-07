@@ -6,6 +6,7 @@
 
 # User Story de adicao de empregado (teste de persistencia)
 
+
 expectError "Nao ha empregado com esse nome." getEmpregadoPorNome nome="Ze Cachaceiro" indice=1
 
 id1=getEmpregadoPorNome nome="Joao da Silva" indice=1

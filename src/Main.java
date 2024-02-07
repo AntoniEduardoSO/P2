@@ -5,11 +5,11 @@ import easyaccept.EasyAccept;
 public class Main {
     public static void main(String[] args) {
         String facade = "br.ufal.ic.p2.wepayu.Facade";
-        // EasyAccept.main(new String[]{facade, "tests/us1.txt"});
-//        EasyAccept.main(new String[]{facade, "tests/us1_1.txt"});
+//         EasyAccept.main(new String[]{facade, "tests/us1.txt"});
+        EasyAccept.main(new String[]{facade, "tests/us1_1.txt"});
 //        EasyAccept.main(new String[]{facade, "tests/us2.txt"});
 //        EasyAccept.main(new String[]{facade, "tests/us2_1.txt"});
-        EasyAccept.main(new String[]{facade, "tests/us3.txt"});
+//        EasyAccept.main(new String[]{facade, "tests/us3.txt"});
 //        EasyAccept.main(new String[]{facade, "tests/us3_1.txt"});
 //        EasyAccept.main(new String[]{facade, "tests/us4.txt"});
 //        EasyAccept.main(new String[]{facade, "tests/us4_1.txt"});
@@ -26,5 +26,4 @@ public class Main {
 //        EasyAccept.main(new String[]{facade, "tests/us10_1.txt"});
     }
 }
-
 

@@ -19,29 +19,48 @@ public class Empregado {
     // Data e Horas
     private Map<LocalDate, Double> cartoesPonto = new HashMap<>();
 
-    public Empregado(String nome, String endereco, String tipo, String salario) {
+    private Integer indice;
+
+    public Empregado(String nome, String endereco, String tipo, String salario, String id) {
         this.nome = nome;
         this.endereco = endereco;
         this.tipo = tipo;
         this.salario = salario;
         this.sindicalizado = Boolean.FALSE;
+        this.id = id;
     }
+
+    public void setIndice(Integer indice){
+        this.indice = indice;
+    }
+
+    public void setId(String id){
+        this.id = id;
+    }
+
+    public String getId() {
+        return this.id;
+    }
+
+    public Integer getIndice(){
+        return this.indice;
+    }
+
 
     public void printarTeste(String id){
         System.out.println(id);
     }
 
     public void adicionarCartaoPonto(LocalDate data, Double horas) {
+        Printar print = new Printar();
+
+
+
         if(!cartoesPonto.containsKey(data)){
-            cartoesPonto.put(data, horas);
+            this.cartoesPonto.put(data, horas);
         } else{
-            Double horasAtuais = cartoesPonto.get(data);
-
-            Printar print = new Printar();
-
-            print.printarTeste("Horas atuais:" + horasAtuais.toString() + " da data" + data.toString());
-
-            cartoesPonto.put(data, horasAtuais + horas);
+            Double horasAtuais = this.cartoesPonto.get(data);
+            this.cartoesPonto.put(data, horasAtuais + horas);
         }
 
     }
@@ -97,7 +116,10 @@ public class Empregado {
     }
 
     public String getSalario() {
-        return salario;
+        if(!this.salario.contains(",")){
+            this.salario += ",00";
+        }
+        return this.salario;
     }
 
     public String getComissao() {

@@ -20,7 +20,7 @@ public class Facade {
     }
 
     public void encerrarSistema(){
-        this.system = new System();
+
     }
 
 
@@ -32,23 +32,27 @@ public class Facade {
         return this.system.setEmpregado(nome, endereco, tipo, salario, comissao);
     }
 
-    public String getAtributoEmpregado(String id, String atributo) throws EmpregadoNaoExisteException, AtributoNaoExisteException, IdEmpregadoNuloException{
+    public String getAtributoEmpregado(String id, String atributo) throws EmpregadoNaoExisteException, AtributoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException{
         return this.system.getAtributoEmpregado(id, atributo);
     }
 
-    public void removerEmpregado(String id) throws EmpregadoNaoExisteException, IdEmpregadoNuloException{
+    public String getEmpregadoPorNome(String nome, Integer indice) throws EmpregadoNaoExisteNomeException{
+        return this.system.getEmpregadoPorNome(nome, indice);
+    }
+
+    public void removerEmpregado(String id) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException{
         this.system.removerEmpregado(id);
     }
 
-    public String getHorasNormaisTrabalhadas(String id, String dataInicial, String dataFinal) throws DataInvalidaException, EmpregadoNaoExisteException, IdEmpregadoNuloException, TipoInvalidoCartaoDePontoException, DataInicialMaiorException {
+    public String getHorasNormaisTrabalhadas(String id, String dataInicial, String dataFinal) throws DataInvalidaException, EmpregadoNaoExisteException, IdEmpregadoNuloException, TipoInvalidoCartaoDePontoException, DataInicialMaiorException, EmpregadoNaoExisteNomeException {
         return this.system.getHorasNormaisTrabalhadasCartaoDePonto(id, dataInicial, dataFinal);
     }
 
-    public String getHorasExtrasTrabalhadas(String id, String dataInicial, String dataFinal) throws DataInvalidaException, EmpregadoNaoExisteException, IdEmpregadoNuloException, TipoInvalidoCartaoDePontoException, DataInicialMaiorException{
+    public String getHorasExtrasTrabalhadas(String id, String dataInicial, String dataFinal) throws DataInvalidaException, EmpregadoNaoExisteException, IdEmpregadoNuloException, TipoInvalidoCartaoDePontoException, DataInicialMaiorException, EmpregadoNaoExisteNomeException{
         return this.system.getHorasExtrasTrabalhadasCartaoDePonto(id, dataInicial, dataFinal);
     }
 
-    public void lancaCartao(String id, String data, Double horas) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, DataInvalidaException, TipoInvalidoCartaoDePontoException, HorasNulasException {
+    public void lancaCartao(String id, String data, String horas) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, DataInvalidaException, TipoInvalidoCartaoDePontoException, HorasNulasException, EmpregadoNaoExisteNomeException {
         this.system.lancaCartao(id, data, horas);
     }
 }
