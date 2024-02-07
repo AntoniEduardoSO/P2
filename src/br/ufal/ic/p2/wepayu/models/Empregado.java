@@ -2,6 +2,10 @@ package br.ufal.ic.p2.wepayu.models;
 
 import br.ufal.ic.p2.wepayu.Exception.VerificarErros.*;
 
+import java.time.LocalDate;
+import java.util.Map;
+import java.util.HashMap;
+
 public class Empregado {
     private String id;
     private String nome;
@@ -12,6 +16,8 @@ public class Empregado {
     private String comissao;
 
     private Boolean sindicalizado;
+    // Data e Horas
+    private Map<LocalDate, Double> cartoesPonto = new HashMap<>();
 
     public Empregado(String nome, String endereco, String tipo, String salario) {
         this.nome = nome;
@@ -23,6 +29,25 @@ public class Empregado {
 
     public void printarTeste(String id){
         System.out.println(id);
+    }
+
+    public void adicionarCartaoPonto(LocalDate data, Double horas) {
+        if(!cartoesPonto.containsKey(data)){
+            cartoesPonto.put(data, horas);
+        } else{
+            Double horasAtuais = cartoesPonto.get(data);
+
+            Printar print = new Printar();
+
+            print.printarTeste("Horas atuais:" + horasAtuais.toString() + " da data" + data.toString());
+
+            cartoesPonto.put(data, horasAtuais + horas);
+        }
+
+    }
+
+    public Map<LocalDate, Double> getCartoesPonto() {
+        return cartoesPonto;
     }
 
     public String getAtributo(String atributo) throws  AtributoNaoExisteException {
@@ -78,4 +103,6 @@ public class Empregado {
     public String getComissao() {
         return comissao;
     }
+
+
 }

@@ -4,20 +4,32 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
 
 
 import br.ufal.ic.p2.wepayu.Exception.*;
 
 
 import br.ufal.ic.p2.wepayu.Exception.VerificarErros.*;
+import br.ufal.ic.p2.wepayu.Exception.VerificarErroCartaoDePonto.*;
 import br.ufal.ic.p2.wepayu.models.Empregado;
 import br.ufal.ic.p2.wepayu.models.Printar;
 
 public class System {
     private Map<String, Empregado> empregados = new HashMap<>();
+
     public System() {
 
 
@@ -76,6 +88,12 @@ public class System {
     public String getAtributoEmpregado(String id, String atributo) throws EmpregadoNaoExisteException, AtributoNaoExisteException, IdEmpregadoNuloException{
         Empregado empregado = getEmpregado(id);
         return empregado.getAtributo(atributo);
+    }
+
+    public void removerEmpregado(String id) throws EmpregadoNaoExisteException, IdEmpregadoNuloException{
+        Empregado empregado = getEmpregado(id);
+
+        empregados.remove(id);
     }
 
 
@@ -168,6 +186,151 @@ public class System {
 
         else if(!salario.contains(",")){
             salario += ",00";
+        }
+    }
+
+    public String getHorasNormaisTrabalhadasCartaoDePonto(String id, String dataInicialString, String dataFinalString) throws DataInvalidaException, EmpregadoNaoExisteException, IdEmpregadoNuloException, TipoInvalidoCartaoDePontoException, DataInicialMaiorException {
+        double horasTotais = 0;
+        LocalDate dataInicial = verifica_data_valida("data_inicial", dataInicialString);
+        LocalDate dataFinal  = verifica_data_valida("data_final", dataFinalString);
+        Printar print = new Printar();
+
+        Empregado empregado = getEmpregado(id);
+
+        if(!empregado.getTipo().equals("horista")){
+            throw new TipoInvalidoCartaoDePontoException();
+        }
+
+        else if (dataInicial.compareTo(dataFinal) > 0) {
+            throw new DataInicialMaiorException();
+        }
+
+//        print.printarTeste("Data incial: " + dataInicial.toString());
+//        print.printarTeste("Data Final: " + dataFinal.toString());
+
+        for (LocalDate data = dataInicial; !data.isAfter(dataFinal); data = data.plusDays(1)) {
+//            print.printarTeste(data.toString());
+            if (empregado.getCartoesPonto().containsKey(data)) {
+                if(empregado.getCartoesPonto().get(data) >= 8){
+                    print.printarTeste("HORAS NORMAIS: data atual: " + data.toString() + " e data que tem o cartao de Ponto: " + empregado.getCartoesPonto().toString());
+                    horasTotais += 8;
+                }
+
+
+                else{
+                    print.printarTeste("HORAS NORMAIS: data atual: " + data.toString() + " e data que tem o cartao de Ponto: " + empregado.getCartoesPonto().toString());
+                    horasTotais += empregado.getCartoesPonto().get(data);
+                }
+            }
+
+        }
+
+
+
+//        print.printarTeste(String.valueOf(horasTotais));
+
+
+
+
+        return String.valueOf(horasTotais);
+    }
+
+    public String getHorasExtrasTrabalhadasCartaoDePonto(String id, String dataInicialString, String dataFinalString) throws DataInvalidaException, EmpregadoNaoExisteException, IdEmpregadoNuloException, TipoInvalidoCartaoDePontoException, DataInicialMaiorException {
+        double horasTotais = 0;
+        LocalDate dataInicial = verifica_data_valida("data_inicial", dataInicialString);
+        LocalDate dataFinal  = verifica_data_valida("data_final", dataFinalString);
+        Printar print = new Printar();
+
+
+        Empregado empregado = getEmpregado(id);
+
+        if(!empregado.getTipo().equals("horista")){
+            throw new TipoInvalidoCartaoDePontoException();
+        }
+
+        else if (dataInicial.compareTo(dataFinal) > 0) {
+            throw new DataInicialMaiorException();
+        }
+
+        for (LocalDate data = dataInicial; !data.isAfter(dataFinal); data = data.plusDays(1)) {
+//            print.printarTeste(data.toString());
+            if (empregado.getCartoesPonto().containsKey(data)) {
+
+                if(empregado.getCartoesPonto().get(data) > 8.0){
+                    print.printarTeste("HORAS EXTRAS: data atual: " + data.toString() + " e data que tem o cartao de Ponto: " + empregado.getCartoesPonto().toString());
+                    horasTotais += empregado.getCartoesPonto().get(data) - 8;
+                }
+            }
+
+        }
+
+        String horasTotaisFormatadas = (horasTotais == (int) horasTotais) ? String.format("%.0f", horasTotais) : String.valueOf(horasTotais);
+
+//        print.printarTeste(String.valueOf(horasTotais));
+
+
+        return String.valueOf(horasTotaisFormatadas);
+    }
+
+    public void lancaCartao(String id, String dataString, Double horas) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, DataInvalidaException, TipoInvalidoCartaoDePontoException, HorasNulasException {
+        Empregado empregado = getEmpregado(id);
+
+        if(!empregado.getTipo().equals("horista")){
+            throw new TipoInvalidoCartaoDePontoException();
+        }
+
+        if(horas <= 0){
+            throw new HorasNulasException("Horas devem ser positivas.");
+        }
+
+        LocalDate data = verifica_data_valida("data_cartao", dataString);
+
+        empregado.adicionarCartaoPonto(data, horas);
+    }
+
+    public LocalDate verifica_data_valida(String identificacao, String dataString) throws DataInvalidaException {
+        Printar print = new Printar();
+        String formato = "";
+
+        int contadorBarras = 0;
+
+        for (int i = 0; i < dataString.length(); i++) {
+            char caractere = dataString.charAt(i);
+            if (caractere == '/') {
+                contadorBarras++;
+                if (contadorBarras == 1) {
+                    formato += (i == 1) ? "d/" : "dd/";
+                } else if (contadorBarras == 2) {
+                    formato += (i == 3) ? "M/" : "MM/";
+                }
+            }
+        }
+
+        formato+="yyyy";
+
+        try{
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formato);
+
+            LocalDate data = LocalDate.parse(dataString, formatter);
+
+            return data;
+        }catch (DateTimeParseException e) {
+            String mensagemErro;
+            switch (identificacao) {
+                case "data_inicial":
+                    mensagemErro = "Data inicial invalida.";
+                    break;
+                case "data_final":
+                    mensagemErro = "Data final invalida.";
+                    break;
+                case "data_cartao":
+                    mensagemErro = "Data invalida.";
+                    break;
+                default:
+                    mensagemErro = "Data invalida.";
+                    break;
+            }
+            throw new DataInvalidaException(mensagemErro);
         }
     }
 
