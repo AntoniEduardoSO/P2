@@ -7,6 +7,7 @@ import java.util.*;
 import br.ufal.ic.p2.wepayu.Exception.*;
 import br.ufal.ic.p2.wepayu.Exception.VerificarErroCartaoDePonto.*;
 import br.ufal.ic.p2.wepayu.Exception.VerificarErros.*;
+import br.ufal.ic.p2.wepayu.Exception.VerificarErrosLancaVendas.TipoInvalidoLancaVendasException;
 import br.ufal.ic.p2.wepayu.models.*;
 
 //import java.util.UUID;
@@ -54,5 +55,20 @@ public class Facade {
 
     public void lancaCartao(String id, String data, String horas) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, DataInvalidaException, TipoInvalidoCartaoDePontoException, HorasNulasException, EmpregadoNaoExisteNomeException {
         this.system.lancaCartao(id, data, horas);
+    }
+
+    public void lancaVenda(String id, String data, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, DataInvalidaException, TipoInvalidoLancaVendasException, HorasNulasException, EmpregadoNaoExisteNomeException{
+        this.system.lancaVenda(id,data,valor);
+    }
+
+    public String getVendasRealizadas(String id, String dataInicial, String dataFinal) throws DataInvalidaException, EmpregadoNaoExisteException, IdEmpregadoNuloException, TipoInvalidoLancaVendasException, DataInicialMaiorException, EmpregadoNaoExisteNomeException {
+        return this.system.getVendasRealizadas(id,dataInicial,dataFinal);
+    }
+
+    public void alteraEmpregado(String id, String atributo, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException{
+        this.system.alteraEmpregado(id,atributo,valor);
+    }
+    public void alteraEmpregado(String id, String atributo, boolean valor, String idSindicato, String taxaSindical) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException{
+        this.system.alteraEmpregado(id,atributo,valor, idSindicato,taxaSindical);
     }
 }

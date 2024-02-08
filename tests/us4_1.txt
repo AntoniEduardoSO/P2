@@ -6,6 +6,7 @@
 
 # User Story de lancamento de resultado de venda (persistencia)
 
+
 id1=getEmpregadoPorNome nome="Joao da Silva" indice=1
 id2=getEmpregadoPorNome nome="Mariazinha" indice=1
 

@@ -9,16 +9,18 @@ import java.util.UUID;
 
 
 import br.ufal.ic.p2.wepayu.Exception.*;
-import br.ufal.ic.p2.wepayu.services.EmpregadoServices;
+import br.ufal.ic.p2.wepayu.models.*;
+import br.ufal.ic.p2.wepayu.services.*;
 
 
 import br.ufal.ic.p2.wepayu.Exception.VerificarErros.*;
 import br.ufal.ic.p2.wepayu.Exception.VerificarErroCartaoDePonto.*;
-import br.ufal.ic.p2.wepayu.models.Empregado;
-import br.ufal.ic.p2.wepayu.models.Printar;
+import br.ufal.ic.p2.wepayu.Exception.VerificarErrosLancaVendas.*;
+
 
 public class System {
     private Map<String, Empregado> empregados = new HashMap<>();
+    private Map<String, Sindicato> sindicatos = new HashMap<>();
 
     public System() {
 
@@ -33,7 +35,7 @@ public class System {
     public String setEmpregado(String nome, String endereco, String tipo, String salario) throws ValidacaoException {
         Printar print = new Printar();
         try {
-            verificarErrosEmpregado(nome, endereco, tipo, salario);
+            EmpregadoServices.verificarErrosEmpregado(nome, endereco, tipo, salario);
             verificarErrosNumericos(salario);
 
             String id = UUID.randomUUID().toString();
@@ -53,7 +55,7 @@ public class System {
     public String setEmpregado(String nome, String endereco, String tipo, String salario, String comissao) throws ValidacaoException {
         try {
             Printar print = new Printar();
-            verificarErrosEmpregado(nome, endereco, tipo, salario, comissao);
+            EmpregadoServices.verificarErrosEmpregado(nome, endereco, tipo, salario, comissao);
             verificarErrosNumericos(salario, comissao);
 
             String id = UUID.randomUUID().toString();
@@ -100,41 +102,6 @@ public class System {
         Empregado empregado = getEmpregado(id);
 
         empregados.remove(id);
-    }
-
-
-    public void verificarErrosEmpregado(String nome, String endereco, String tipo, String salario) throws AtributoNuloException, AtributoTipoNaoValido, AtributoTipoNaoAplicavelException {
-
-        if (nome.isEmpty()) {
-            throw new AtributoNuloException("Nome");
-        } else if (endereco.isEmpty()) {
-            throw new AtributoNuloException("Endereco");
-        } else if (salario.isEmpty()) {
-            throw new AtributoNuloException("Salario");
-        } else if (tipo.equals("abc")) {
-            throw new AtributoTipoNaoValido();
-        } else if (tipo.equals("comissionado")) {
-            throw new AtributoTipoNaoAplicavelException();
-        }
-
-
-    }
-
-    public void verificarErrosEmpregado(String nome, String endereco, String tipo, String salario, String comissao) throws AtributoNuloException, AtributoTipoNaoValido, AtributoTipoNaoAplicavelException {
-
-        if (nome.isEmpty()) {
-            throw new AtributoNuloException("Nome");
-        } else if (endereco.isEmpty()) {
-            throw new AtributoNuloException("Endereco");
-        } else if (salario.isEmpty()) {
-            throw new AtributoNuloException("Salario");
-        } else if (comissao.isEmpty()) {
-            throw new AtributoNuloException("Comissao");
-        } else if (!tipo.equals("comissionado")) {
-            throw new AtributoTipoNaoAplicavelException();
-        }
-
-
     }
 
     public void verificarErrosNumericos(String salario) throws AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
@@ -234,7 +201,6 @@ public class System {
     }
 
     public void lancaCartao(String id, String dataString, String horasString) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, DataInvalidaException, TipoInvalidoCartaoDePontoException, HorasNulasException, EmpregadoNaoExisteNomeException {
-        Printar print = new Printar();
         Empregado empregado = getEmpregado(id);
         horasString = horasString.replace(',', '.');
         double horas = Double.parseDouble(horasString);
@@ -250,6 +216,40 @@ public class System {
         LocalDate data = verifica_data_valida("data_cartao", dataString);
 
         empregado.adicionarCartaoPonto(data, horas);
+    }
+
+    public void lancaVenda(String id, String dataString, String valorString)  throws EmpregadoNaoExisteException, IdEmpregadoNuloException, DataInvalidaException, TipoInvalidoLancaVendasException, HorasNulasException, EmpregadoNaoExisteNomeException{
+        Empregado empregado = getEmpregado(id);
+        valorString = valorString.replace(',', '.');
+        double valor = Double.parseDouble(valorString);
+
+        if (!empregado.getTipo().equals("comissionado")) {
+            throw new TipoInvalidoLancaVendasException();
+        }
+
+        if(valor <= 0 ){
+            throw new HorasNulasException("Valor deve ser positivo.");
+        }
+
+        LocalDate data = verifica_data_valida("data_cartao", dataString);
+        Vendas vendas = new Vendas(data,valor);
+
+        empregado.setLancaVendas(vendas);
+    }
+
+    public String getVendasRealizadas(String id, String dataInicialString, String dataFinalString) throws DataInvalidaException, EmpregadoNaoExisteException, IdEmpregadoNuloException, TipoInvalidoLancaVendasException, DataInicialMaiorException, EmpregadoNaoExisteNomeException{
+        double valor = 0;
+        Empregado empregado = getEmpregado(id);
+        LocalDate dataInicial = verifica_data_valida("data_inicial", dataInicialString);
+        LocalDate dataFinal = verifica_data_valida("data_final", dataFinalString);
+
+        if (!empregado.getTipo().equals("comissionado")) {
+            throw new TipoInvalidoLancaVendasException();
+        } else if (dataInicial.compareTo(dataFinal) > 0) {
+            throw new DataInicialMaiorException();
+        }
+
+        return empregado.lancaVendas(dataInicial,dataFinal);
     }
 
     public LocalDate verifica_data_valida(String identificacao, String dataString) throws DataInvalidaException {
@@ -296,6 +296,64 @@ public class System {
             }
             throw new DataInvalidaException(mensagemErro);
         }
+    }
+
+    public void alteraEmpregado(String id, String atributo, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException{
+        Empregado empregado = getEmpregado(id);
+
+        switch (atributo){
+            case "sindicalizado":
+                empregado.getSindicalizado().setValor(Boolean.FALSE);
+        }
+    }
+
+    public void alteraEmpregado(String id, String atributo, boolean valor, String idSindicato, String taxaSindical) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException{
+        Printar print = new Printar();
+        Empregado empregado = getEmpregado(id);
+
+
+
+        switch (atributo){
+            case "sindicalizado":
+                Sindicato sindicato = new Sindicato();
+
+        }
+
+        // alteraEmpregado emp=${id3} atributo=sindicalizado valor=true idSindicato=s130 taxaSindical=1,00
+
+//        if(this.sindicatos.containsKey(sindicato.getId())){
+//
+//        }
+
+
+    }
+
+    public Sindicato getSindicato(String membro){
+        if(!this.sindicatos.containsKey(membro)){
+            throw new RuntimeException("FODA-SEEE");
+        } else if(membro == null){
+            throw new RuntimeException("caguei");
+        }
+
+
+        return this.sindicatos.get(membro);
+    }
+
+    public void lancaServico(String membro, String dataString, String valorString) throws HorasNulasException, DataInvalidaException {
+
+
+        valorString = valorString.replace(',', '.');
+        double valor = Double.parseDouble(valorString);
+
+
+        if(valor <= 0 ){
+            throw new HorasNulasException("Servico deve ser positivo.");
+        }
+
+        LocalDate data = verifica_data_valida("data_cartao", dataString);
+        Servico vendas = new Servico(data,valor);
+
+
     }
 
 }
