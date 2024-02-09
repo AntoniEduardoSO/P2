@@ -5,13 +5,18 @@ import java.time.LocalDate;
 public class Servico {
 
         LocalDate data;
-        Double valor;
-        public Servico(LocalDate data, Double valor){
+        String valor;
+        public Servico(LocalDate data, String valor){
             this.data = data;
             this.valor = valor;
         }
 
-        public Double getValor() {
+        public String getValor() {
+            if(this.valor.contains(",")){
+
+                this.valor = valor.replace(",", ".");
+            }
+
             return this.valor;
         }
 

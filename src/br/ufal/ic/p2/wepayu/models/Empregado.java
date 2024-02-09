@@ -7,12 +7,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
-import br.ufal.ic.p2.wepayu.models.Vendas;
-import br.ufal.ic.p2.wepayu.models.Sindicato;
 
-
-
-import javax.swing.text.StyledEditorKit;
 public class Empregado {
     private String id;
     private String nome;
@@ -30,6 +25,10 @@ public class Empregado {
 
     private final List<Vendas> listaVendas = new ArrayList<>();
 
+    private Banco banco;
+
+    private String metodoDePagamento;
+
     public Empregado(String nome, String endereco, String tipo, String salario, String id) {
         this.nome = nome;
         this.endereco = endereco;
@@ -37,6 +36,7 @@ public class Empregado {
         this.salario = salario;
         this.sindicato.setValor(Boolean.FALSE);
         this.id = id;
+        this.metodoDePagamento = "";
     }
 
     public String getId() {
@@ -84,8 +84,40 @@ public class Empregado {
                 return String.valueOf(this.sindicato.getValor());
 
             case "comissao":
+                if(!this.getTipo().equals("comissionado")){
+                    throw new NullPointerException("Empregado nao eh comissionado.");
+                }
                 return this.getComissao();
 
+            case "idSindicato":
+                if(!this.sindicato.getValor() == Boolean.TRUE){
+                    throw new NullPointerException("Empregado nao eh sindicalizado.");
+                }
+                return this.sindicato.getId();
+
+            case "taxaSindical":
+                if(!this.sindicato.getValor() == Boolean.TRUE){
+                    throw new NullPointerException("Empregado nao eh sindicalizado.");
+                }
+                return this.sindicato.getTaxaSindical();
+
+            case "banco":
+                if(!this.metodoDePagamento.equals("banco")){
+                    throw new NullPointerException("Empregado nao recebe em banco.");
+                }
+                return this.banco.getBanco();
+
+            case "agencia":
+                if(!this.metodoDePagamento.equals("banco")){
+                    throw new NullPointerException("Empregado nao recebe em banco.");
+                }
+                return this.banco.getAgencia();
+
+            case "contaCorrente":
+                if(!this.metodoDePagamento.equals("banco")){
+                    throw new NullPointerException("Empregado nao recebe em banco.");
+                }
+                return this.banco.getAgencia();
 
             default:
                 throw new AtributoNaoExisteException();
@@ -104,9 +136,17 @@ public class Empregado {
         return this.listaVendas;
     }
 
+    public Banco getBanco() {
+        return banco;
+    }
 
+    public String getMetodoDePagamento() {
+        return metodoDePagamento;
+    }
 
-
+    public void setSindicato(Sindicato sindicato){
+        this.sindicato = sindicato;
+    }
 
     public void setLancaVendas(Vendas vendas){
         listaVendas.add(vendas);
@@ -127,7 +167,6 @@ public class Empregado {
 
         if (totalVendasDiaFormatadas.contains(".")) {
             if(totalVendasDiaFormatadas.matches(".*\\d.*")){
-                System.out.println("existi aqui");
                 totalVendasDiaFormatadas += "0";
             }
         }
@@ -177,4 +216,27 @@ public class Empregado {
         this.comissao = comissao;
     }
 
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public void setEndereco(String endereco) {
+        this.endereco = endereco;
+    }
+
+    public void setSalario(String salario) {
+        this.salario = salario;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+
+    public void setBanco(Banco banco) {
+        this.banco = banco;
+    }
+
+    public void setMetodoDePagamento(String metodoDePagamento) {
+        this.metodoDePagamento = metodoDePagamento;
+    }
 }

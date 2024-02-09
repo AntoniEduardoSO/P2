@@ -68,10 +68,18 @@ public class Facade {
         return this.system.getVendasRealizadas(id,dataInicial,dataFinal);
     }
 
-    public void alteraEmpregado(String id, String atributo, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException{
+    public void alteraEmpregado(String id, String atributo, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
         this.system.alteraEmpregado(id,atributo,valor);
     }
-    public void alteraEmpregado(String id, String atributo, boolean valor, String idSindicato, String taxaSindical) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException{
+    public void alteraEmpregado(String id, String atributo, boolean valor, String idSindicato, String taxaSindical) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException, AtributoValorException {
         this.system.alteraEmpregado(id,atributo,valor, idSindicato,taxaSindical);
+    }
+
+    public void lancaTaxaServico(String membro, String data, String valor) throws HorasNulasException, DataInvalidaException, AtributoNumericoNegativoException, AtributoValorException, AtributoNumericoNaoNumericoException {
+        this.system.lancaServico(membro,data,valor);
+    }
+
+    public String getTaxasServico(String id, String dataInicial, String dataFinal) throws DataInvalidaException, EmpregadoNaoExisteNomeException, EmpregadoNaoExisteException, IdEmpregadoNuloException, DataInicialMaiorException {
+        return this.system.getTaxasServico(id,dataInicial,dataFinal);
     }
 }

@@ -1,13 +1,11 @@
 package br.ufal.ic.p2.wepayu;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.UUID;
 import java.io.File;
 
@@ -80,14 +78,6 @@ public class System {
 
 
 
-                for(Servico servico : empregado.getSindicalizado().getLancaServico()){
-                    Element servicoElement = doc.createElement("servico");
-                    sindicatoElement.setAttribute("data",servico.getData().toString());
-                    sindicatoElement.setAttribute("valor",servico.getValor().toString());
-                    sindicatoElement.appendChild(servicoElement);
-                }
-
-
                 for (Map.Entry<LocalDate, Double> cartao : empregado.getCartoesPonto().entrySet()) {
                     LocalDate data = cartao.getKey();
                     Double horas = cartao.getValue();
@@ -105,7 +95,16 @@ public class System {
                     vendaElement.setAttribute("valor", valor.toString());
                     empregadoElement.appendChild(vendaElement);
                 }
-//                print.printarTeste(this.empregados.toString());
+//
+                for(Servico servico : empregado.getSindicalizado().getLancaServico()){
+                    LocalDate data = servico.getData();
+                    String valor = servico.getValor();
+                    Element servicoElement = doc.createElement("servico");
+                    servicoElement.setAttribute("data", data.toString());
+                    servicoElement.setAttribute("valor", valor);
+                    empregadoElement.appendChild(servicoElement);
+                }
+
                 rootElement.appendChild(empregadoElement);
             }
 
@@ -165,21 +164,41 @@ public class System {
                                     String sindicatoId = childElement.getAttribute("sindicato_id");
                                     String valor = childElement.getAttribute("valor");
 
-                                    // Adicione o código para lidar com os dados do sindicato aqui
+                                    Sindicato sindicato = new Sindicato(sindicatoId,valor);
+                                    empregado.setSindicato(sindicato);
+
                                 } else if (tagName.equals("cartaoPonto")) {
-                                    String data = childElement.getAttribute("data");
+                                    String dataString = childElement.getAttribute("data");
                                     String horas = childElement.getAttribute("horas");
 
 
+                                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+                                    LocalDate data = LocalDate.parse(dataString, formatter);
+
+                                    empregado.adicionarCartaoPonto(data,Double.parseDouble(horas));
+//
+
+
                                 } else if (tagName.equals("venda")) {
-                                    LocalDate data = verifica_data_valida("cartao_ponto", childElement.getAttribute("data")) ;
+                                    String dataString = childElement.getAttribute("data");
                                     String valor = childElement.getAttribute("valor");
+                                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+                                    LocalDate data = LocalDate.parse(dataString, formatter);
+
                                     Vendas vendas = new Vendas( data, Double.parseDouble(valor));
                                     empregado.setLancaVendas(vendas);
+
                                 } else if (tagName.equals("servico")) {
-                                    String data = childElement.getAttribute("data");
+                                    String dataString = childElement.getAttribute("data");
                                     String valor = childElement.getAttribute("valor");
-                                    // Adicione o código para lidar com os dados do serviço aqui
+                                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+                                    LocalDate data = LocalDate.parse(dataString, formatter);
+
+                                    Servico servico = new Servico(data, valor);
+                                    empregado.getSindicalizado().setListaServico(servico);
                                 }
                             }
                         }
@@ -285,6 +304,20 @@ public class System {
         empregados.remove(id);
     }
 
+    public void verificarErrosNumericosSindicato(String valor) throws AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException, AtributoValorException {
+        Printar print = new Printar();
+        if(valor.equals("0")){
+            throw new AtributoValorException("Valor deve ser positivo.");
+        } else if (valor.contains("-")) {
+            throw new AtributoValorException("Valor deve ser positivo.");
+        } else if (valor.matches(".*[a-zA-Z].*")) {
+            throw new AtributoValorException("Valor deve ser numerico.");
+        }
+        else if(valor.contains(",")){
+            valor+="0";
+        }
+    }
+
     public void verificarErrosNumericos(String salario) throws AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
         Printar print = new Printar();
 
@@ -381,6 +414,40 @@ public class System {
         return String.valueOf(horasTotaisFormatadas);
     }
 
+    public String getVendasRealizadas(String id, String dataInicialString, String dataFinalString) throws DataInvalidaException, EmpregadoNaoExisteException, IdEmpregadoNuloException, TipoInvalidoLancaVendasException, DataInicialMaiorException, EmpregadoNaoExisteNomeException{
+        double valor = 0;
+        Empregado empregado = getEmpregado(id);
+        LocalDate dataInicial = verifica_data_valida("data_inicial", dataInicialString);
+        LocalDate dataFinal = verifica_data_valida("data_final", dataFinalString);
+
+        if (!empregado.getTipo().equals("comissionado")) {
+            throw new TipoInvalidoLancaVendasException();
+        } else if (dataInicial.compareTo(dataFinal) > 0) {
+            throw new DataInicialMaiorException();
+        }
+
+        return empregado.lancaVendas(dataInicial,dataFinal);
+    }
+    public String getTaxasServico(String id, String dataInicialString, String dataFinalString) throws DataInvalidaException, EmpregadoNaoExisteNomeException, EmpregadoNaoExisteException, IdEmpregadoNuloException, DataInicialMaiorException {
+        double valor = 0;
+        Empregado empregado = getEmpregado(id);
+
+        if(empregado.getSindicalizado().getValor() == Boolean.FALSE){
+            throw new NullPointerException("Empregado nao eh sindicalizado.");
+        }
+
+        Sindicato sindicato = empregado.getSindicalizado();
+
+        LocalDate dataInicial = verifica_data_valida("data_inicial", dataInicialString);
+        LocalDate dataFinal = verifica_data_valida("data_final", dataFinalString);
+
+        if (dataInicial.compareTo(dataFinal) > 0) {
+            throw new DataInicialMaiorException();
+        }
+
+        return sindicato.lancaServico(dataInicial, dataFinal);
+    }
+
     public void lancaCartao(String id, String dataString, String horasString) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, DataInvalidaException, TipoInvalidoCartaoDePontoException, HorasNulasException, EmpregadoNaoExisteNomeException {
         Empregado empregado = getEmpregado(id);
         horasString = horasString.replace(',', '.');
@@ -416,21 +483,6 @@ public class System {
         Vendas vendas = new Vendas(data,valor);
 
         empregado.setLancaVendas(vendas);
-    }
-
-    public String getVendasRealizadas(String id, String dataInicialString, String dataFinalString) throws DataInvalidaException, EmpregadoNaoExisteException, IdEmpregadoNuloException, TipoInvalidoLancaVendasException, DataInicialMaiorException, EmpregadoNaoExisteNomeException{
-        double valor = 0;
-        Empregado empregado = getEmpregado(id);
-        LocalDate dataInicial = verifica_data_valida("data_inicial", dataInicialString);
-        LocalDate dataFinal = verifica_data_valida("data_final", dataFinalString);
-
-        if (!empregado.getTipo().equals("comissionado")) {
-            throw new TipoInvalidoLancaVendasException();
-        } else if (dataInicial.compareTo(dataFinal) > 0) {
-            throw new DataInicialMaiorException();
-        }
-
-        return empregado.lancaVendas(dataInicial,dataFinal);
     }
 
     public LocalDate verifica_data_valida(String identificacao, String dataString) throws DataInvalidaException {
@@ -479,63 +531,112 @@ public class System {
         }
     }
 
-    public void alteraEmpregado(String id, String atributo, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException{
+    public void alteraEmpregado(String id, String atributo, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
         Empregado empregado = getEmpregado(id);
 
         switch (atributo){
             case "sindicalizado":
-                empregado.getSindicalizado().setValor(Boolean.FALSE);
+                if(valor.equals("false")){
+                    empregado.getSindicalizado().setValor(Boolean.FALSE);
+                } else{
+                    empregado.getSindicalizado().setValor(Boolean.TRUE);
+                }
+            case "nome":
+                empregado.setNome(valor);
+
+            case "salario":
+                verificarErrosNumericos(valor);
+                empregado.setSalario(valor);
+
+            case "tipo":
+                if(valor.equals("abc")){
+                    throw new NullPointerException("Tipo nao aplicavel");
+                }
+                empregado.setTipo(valor);
+
+            case "comissao":
+                if(!empregado.getTipo().equals("comissionado")){
+                   throw new NullPointerException("Empregado nao e comissionado.");
+                }
+
+                verificarErrosNumericos(empregado.getSalario() ,valor);
+                empregado.setComissao(valor);
+
+            case "endereco":
+                empregado.setEndereco(valor);
+
+
+//            default:
+//                throw new NullPointerException("Tipo invalido.");
         }
     }
 
-    public void alteraEmpregado(String id, String atributo, boolean valor, String idSindicato, String taxaSindical) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException{
+    public void alteraEmpregado(String id, String atributo, boolean valor, String idSindicato, String taxaSindicalString) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException, AtributoValorException {
         Printar print = new Printar();
         Empregado empregado = getEmpregado(id);
 
+        verificarErrosNumericosSindicato(taxaSindicalString);
 
-
-        switch (atributo){
-            case "sindicalizado":
-                Sindicato sindicato = new Sindicato();
-
+        for(Map.Entry<String, Empregado> entry : empregados.entrySet()){
+            if(entry.getValue().getSindicalizado().getValor() == Boolean.TRUE){
+                if(entry.getValue().getSindicalizado().getId().equals(idSindicato)){
+                    print.printarTeste("to no segundo if");
+                    throw new NullPointerException("Ha outro empregado com esta identificacao de sindicato");
+                }
+            }
         }
 
-        // alteraEmpregado emp=${id3} atributo=sindicalizado valor=true idSindicato=s130 taxaSindical=1,00
+        Sindicato sindicato = new Sindicato(idSindicato,taxaSindicalString);
+        empregado.setSindicato(sindicato);
 
-//        if(this.sindicatos.containsKey(sindicato.getId())){
-//
-//        }
+    }
 
+    public void alteraEmpregado(String id, String atributo, String valor1, String banco, String agencia, String contaCorrente){
+        if(valor1.equals(banco)){
+            vericaErrosMetodoDePagamento(banco,agencia,contaCorrente);
+        }
+    }
 
+    public void vericaErrosMetodoDePagamento( String banco, String agencia, String contaCorrente){
+        if(banco.isEmpty()){
+
+        }else if(agencia.isEmpty()){
+
+        } else if (contaCorrente.isEmpty()) {
+
+        }
     }
 
     public Sindicato getSindicato(String membro){
 
         for(Map.Entry<String, Empregado> empregado : empregados.entrySet()){
-
+            if(empregado.getValue().getSindicalizado().getValor() == Boolean.TRUE){
+                if(empregado.getValue().getSindicalizado().getId().equals(membro)){
+                    return empregado.getValue().getSindicalizado();
+                }
+            }
         }
 
 
-
-
-        return null;
+        throw new NullPointerException("Membro nao existe.");
     }
 
-    public void lancaServico(String membro, String dataString, String valorString) throws HorasNulasException, DataInvalidaException {
-
-
-        valorString = valorString.replace(',', '.');
-        double valor = Double.parseDouble(valorString);
-
-
-        if(valor <= 0 ){
-            throw new HorasNulasException("Servico deve ser positivo.");
+    public void lancaServico(String membro, String dataString, String valorString) throws HorasNulasException, DataInvalidaException, AtributoNumericoNegativoException, AtributoValorException, AtributoNumericoNaoNumericoException {
+        if(membro == null || membro.equals("")){
+            throw new NullPointerException("Identificacao do membro nao pode ser nula.");
         }
 
+
+        Sindicato sindicato =  getSindicato(membro);
+        verificarErrosNumericosSindicato(valorString);
         LocalDate data = verifica_data_valida("data_cartao", dataString);
-        Servico vendas = new Servico(data,valor);
 
 
+
+        Servico servico = new Servico(data,valorString);
+        sindicato.setListaServico(servico);
     }
+
+
 
 }

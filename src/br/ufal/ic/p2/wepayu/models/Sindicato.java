@@ -9,7 +9,18 @@ import java.util.List;
 public class Sindicato {
     String id;
     boolean valor;
+    String taxaSindical;
     private final List<Servico> listaServico = new ArrayList<>();
+
+    public Sindicato(String id,  String taxaSindical){
+        this.valor = Boolean.TRUE;
+        this.id = id;
+        this.taxaSindical = taxaSindical;
+    }
+
+    public Sindicato() {
+
+    }
 
 
     public List<Servico> getLancaServico(){
@@ -19,9 +30,9 @@ public class Sindicato {
     public String lancaServico(LocalDate dataInicial, LocalDate dataFinal) {
         double totalVendasDia = 0;
         for (LocalDate data = dataInicial; !data.isEqual(dataFinal); data = data.plusDays(1)) {
-            for (Servico servico : listaServico) {
+            for (Servico servico : this.listaServico) {
                 if (servico.getData().isEqual(data)) {
-                    totalVendasDia += servico.getValor();
+                    totalVendasDia += Double.parseDouble(servico.getValor());
                 }
             }
         }
@@ -53,6 +64,9 @@ public class Sindicato {
         this.valor = valor;
     }
 
+    public void setListaServico(Servico servico){
+        this.listaServico.add(servico);
+    }
     public String getId(){
         return this.id;
     }
@@ -61,5 +75,7 @@ public class Sindicato {
         this.id = id;
     }
 
-
+    public String getTaxaSindical() {
+        return taxaSindical;
+    }
 }
