@@ -45,7 +45,7 @@ public class System {
 
     public void zerarSistema() {
         this.file.delete();
-//        this.empregados = new LinkedHashMap<>();
+        this.empregados = new LinkedHashMap<>();
     }
 
     public void encerrarSistema(){
@@ -73,39 +73,39 @@ public class System {
                 empregadoElement.setAttribute("indice", empregado.getIndice().toString());
 
 
-//                Element sindicatoElement = doc.createElement("sindicato");
-//                sindicatoElement.setAttribute("sindicato_id", empregado.getSindicalizado().getId());
-//                sindicatoElement.setAttribute("valor", String.valueOf(empregado.getSindicalizado().getValor()));
-//                empregadoElement.appendChild(sindicatoElement);
-//
-//
-//
-//                for(Servico servico : empregado.getSindicalizado().getLancaServico()){
-//                    Element servicoElement = doc.createElement("servico");
-//                    sindicatoElement.setAttribute("data",servico.getData().toString());
-//                    sindicatoElement.setAttribute("valor",servico.getValor().toString());
-//                    sindicatoElement.appendChild(servicoElement);
-//                }
-//
-//
-//                for (Map.Entry<LocalDate, Double> cartao : empregado.getCartoesPonto().entrySet()) {
-//                    LocalDate data = cartao.getKey();
-//                    Double horas = cartao.getValue();
-//                    Element cartaoElement = doc.createElement("cartaoPonto");
-//                    cartaoElement.setAttribute("data", data.toString());
-//                    cartaoElement.setAttribute("horas", horas.toString());
-//                    empregadoElement.appendChild(cartaoElement);
-//                }
-//
-//                for(Vendas venda : empregado.getLancaVendas()){
-//                    LocalDate data = venda.getData();
-//                    Double valor = venda.getValor();
-//                    Element vendaElement = doc.createElement("venda");
-//                    vendaElement.setAttribute("data", data.toString());
-//                    vendaElement.setAttribute("valor", valor.toString());
-//                    empregadoElement.appendChild(vendaElement);
-//                }
-                print.printarTeste(this.empregados.toString());
+                Element sindicatoElement = doc.createElement("sindicato");
+                sindicatoElement.setAttribute("sindicato_id", empregado.getSindicalizado().getId());
+                sindicatoElement.setAttribute("valor", String.valueOf(empregado.getSindicalizado().getValor()));
+                empregadoElement.appendChild(sindicatoElement);
+
+
+
+                for(Servico servico : empregado.getSindicalizado().getLancaServico()){
+                    Element servicoElement = doc.createElement("servico");
+                    sindicatoElement.setAttribute("data",servico.getData().toString());
+                    sindicatoElement.setAttribute("valor",servico.getValor().toString());
+                    sindicatoElement.appendChild(servicoElement);
+                }
+
+
+                for (Map.Entry<LocalDate, Double> cartao : empregado.getCartoesPonto().entrySet()) {
+                    LocalDate data = cartao.getKey();
+                    Double horas = cartao.getValue();
+                    Element cartaoElement = doc.createElement("cartaoPonto");
+                    cartaoElement.setAttribute("data", data.toString());
+                    cartaoElement.setAttribute("horas", horas.toString());
+                    empregadoElement.appendChild(cartaoElement);
+                }
+
+                for(Vendas venda : empregado.getLancaVendas()){
+                    LocalDate data = venda.getData();
+                    Double valor = venda.getValor();
+                    Element vendaElement = doc.createElement("venda");
+                    vendaElement.setAttribute("data", data.toString());
+                    vendaElement.setAttribute("valor", valor.toString());
+                    empregadoElement.appendChild(vendaElement);
+                }
+//                print.printarTeste(this.empregados.toString());
                 rootElement.appendChild(empregadoElement);
             }
 
@@ -122,7 +122,7 @@ public class System {
         }
     }
 
-    public void recuperarDadosEmpregado(){
+    public void recuperarDadosEmpregado() throws HorasNulasException, EmpregadoNaoExisteNomeException, EmpregadoNaoExisteException, IdEmpregadoNuloException, TipoInvalidoCartaoDePontoException, DataInvalidaException, TipoInvalidoLancaVendasException {
         if(this.funcao.equals(Boolean.FALSE)){
             try {
                 Printar print = new Printar();
@@ -152,7 +152,37 @@ public class System {
                         if(!comissao.equals("")){
                             empregado.setComissao(comissao);
                         }
+                        empregado.setIndice( Integer.parseInt(indice));
 
+
+                        NodeList children = empregadoElement.getChildNodes();
+                        for (int j = 0; j < children.getLength(); j++) {
+                            Node child = children.item(j);
+                            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                                Element childElement = (Element) child;
+                                String tagName = childElement.getTagName();
+                                if (tagName.equals("sindicato")) {
+                                    String sindicatoId = childElement.getAttribute("sindicato_id");
+                                    String valor = childElement.getAttribute("valor");
+
+                                    // Adicione o código para lidar com os dados do sindicato aqui
+                                } else if (tagName.equals("cartaoPonto")) {
+                                    String data = childElement.getAttribute("data");
+                                    String horas = childElement.getAttribute("horas");
+
+
+                                } else if (tagName.equals("venda")) {
+                                    LocalDate data = verifica_data_valida("cartao_ponto", childElement.getAttribute("data")) ;
+                                    String valor = childElement.getAttribute("valor");
+                                    Vendas vendas = new Vendas( data, Double.parseDouble(valor));
+                                    empregado.setLancaVendas(vendas);
+                                } else if (tagName.equals("servico")) {
+                                    String data = childElement.getAttribute("data");
+                                    String valor = childElement.getAttribute("valor");
+                                    // Adicione o código para lidar com os dados do serviço aqui
+                                }
+                            }
+                        }
 
                         this.empregados.put(id,empregado);
                     }
@@ -225,9 +255,22 @@ public class System {
     public String getEmpregadoPorNome(String nome, Integer indice) throws EmpregadoNaoExisteNomeException{
         Printar print = new Printar();
         if(file.exists()){
-            recuperarDadosEmpregado();
+            try {
+                recuperarDadosEmpregado();
+            } catch (HorasNulasException e) {
+                throw new RuntimeException(e);
+            } catch (EmpregadoNaoExisteException e) {
+                throw new RuntimeException(e);
+            } catch (IdEmpregadoNuloException e) {
+                throw new RuntimeException(e);
+            } catch (TipoInvalidoCartaoDePontoException e) {
+                throw new RuntimeException(e);
+            } catch (DataInvalidaException e) {
+                throw new RuntimeException(e);
+            } catch (TipoInvalidoLancaVendasException e) {
+                throw new RuntimeException(e);
+            }
         }
-//        print.printarTeste("oi?" + this.empregados.containsKey());
         return EmpregadoServices.verificarPorNome(nome, this.empregados, indice);
     }
 

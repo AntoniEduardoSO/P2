@@ -36,11 +36,8 @@ public class EmpregadoServices {
     public static String verificarPorNome(String nome, Map<String, Empregado> empregados, Integer indice) throws EmpregadoNaoExisteNomeException {
         Printar print  = new Printar();
 
-        print.printarTeste("NOME: ");
-
         for (Map.Entry<String, Empregado> entry : empregados.entrySet()) {
             if (entry.getValue().getNome().equals(nome) && entry.getValue().getIndice().equals(indice)) {
-                print.printarTeste("NOME: " + entry.getValue().getNome());
                 return entry.getValue().getId();
             }
         }
