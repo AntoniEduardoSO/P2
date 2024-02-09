@@ -1,12 +1,27 @@
 package br.ufal.ic.p2.wepayu;
 
+import java.io.IOException;
+import java.io.PrintStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.UUID;
+import java.io.File;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import br.ufal.ic.p2.wepayu.Exception.*;
 import br.ufal.ic.p2.wepayu.models.*;
@@ -16,20 +31,139 @@ import br.ufal.ic.p2.wepayu.services.*;
 import br.ufal.ic.p2.wepayu.Exception.VerificarErros.*;
 import br.ufal.ic.p2.wepayu.Exception.VerificarErroCartaoDePonto.*;
 import br.ufal.ic.p2.wepayu.Exception.VerificarErrosLancaVendas.*;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 
 public class System {
-    private Map<String, Empregado> empregados = new HashMap<>();
-    private Map<String, Sindicato> sindicatos = new HashMap<>();
 
-    public System() {
-
-
-    }
+    private Map<String, Empregado> empregados = new LinkedHashMap<>();
+    File file = new File("./database/empregados.xml");
+    private Boolean funcao = Boolean.FALSE;
 
 
     public void zerarSistema() {
-        this.empregados = new HashMap<>();
+        this.file.delete();
+//        this.empregados = new LinkedHashMap<>();
+    }
+
+    public void encerrarSistema(){
+        Printar print =  new Printar();
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        try {
+            DocumentBuilder builder = factory.newDocumentBuilder();
+
+            Document doc = builder.newDocument();
+
+            // Elemento raiz
+            Element rootElement = doc.createElement("empregados");
+            doc.appendChild(rootElement);
+
+            // Adiciona cada empregado como um elemento filho do elemento raiz
+            for (Map.Entry<String, Empregado> entry : empregados.entrySet()) {
+                Empregado empregado = entry.getValue();
+                Element empregadoElement = doc.createElement("empregado");
+                empregadoElement.setAttribute("id", entry.getKey());
+                empregadoElement.setAttribute("nome", empregado.getNome());
+                empregadoElement.setAttribute("endereco", empregado.getEndereco());
+                empregadoElement.setAttribute("tipo", empregado.getTipo());
+                empregadoElement.setAttribute("salario", empregado.getSalario());
+                empregadoElement.setAttribute("comissao", empregado.getComissao());
+                empregadoElement.setAttribute("indice", empregado.getIndice().toString());
+
+
+//                Element sindicatoElement = doc.createElement("sindicato");
+//                sindicatoElement.setAttribute("sindicato_id", empregado.getSindicalizado().getId());
+//                sindicatoElement.setAttribute("valor", String.valueOf(empregado.getSindicalizado().getValor()));
+//                empregadoElement.appendChild(sindicatoElement);
+//
+//
+//
+//                for(Servico servico : empregado.getSindicalizado().getLancaServico()){
+//                    Element servicoElement = doc.createElement("servico");
+//                    sindicatoElement.setAttribute("data",servico.getData().toString());
+//                    sindicatoElement.setAttribute("valor",servico.getValor().toString());
+//                    sindicatoElement.appendChild(servicoElement);
+//                }
+//
+//
+//                for (Map.Entry<LocalDate, Double> cartao : empregado.getCartoesPonto().entrySet()) {
+//                    LocalDate data = cartao.getKey();
+//                    Double horas = cartao.getValue();
+//                    Element cartaoElement = doc.createElement("cartaoPonto");
+//                    cartaoElement.setAttribute("data", data.toString());
+//                    cartaoElement.setAttribute("horas", horas.toString());
+//                    empregadoElement.appendChild(cartaoElement);
+//                }
+//
+//                for(Vendas venda : empregado.getLancaVendas()){
+//                    LocalDate data = venda.getData();
+//                    Double valor = venda.getValor();
+//                    Element vendaElement = doc.createElement("venda");
+//                    vendaElement.setAttribute("data", data.toString());
+//                    vendaElement.setAttribute("valor", valor.toString());
+//                    empregadoElement.appendChild(vendaElement);
+//                }
+                print.printarTeste(this.empregados.toString());
+                rootElement.appendChild(empregadoElement);
+            }
+
+            // Transforma o documento XML em arquivo
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource source = new DOMSource(doc);
+            File file = new File("./database/empregados.xml");
+            StreamResult result = new StreamResult(file);
+            transformer.transform(source, result);
+
+        } catch (ParserConfigurationException | TransformerException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void recuperarDadosEmpregado(){
+        if(this.funcao.equals(Boolean.FALSE)){
+            try {
+                Printar print = new Printar();
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder = factory.newDocumentBuilder();
+                Document doc = builder.parse(new File("./database/empregados.xml"));
+
+                doc.getDocumentElement().normalize();
+
+                NodeList empregadoNodes = doc.getElementsByTagName("empregado");
+
+                for (int i = 0; i < empregadoNodes.getLength(); i++) {
+                    Node empregadoNode = empregadoNodes.item(i);
+
+                    if ( empregadoNode.getNodeType() == Node.ELEMENT_NODE) {
+                        Element empregadoElement = (Element) empregadoNode;
+
+                        String id = empregadoElement.getAttribute("id");
+                        String nome = empregadoElement.getAttribute("nome");
+                        String endereco = empregadoElement.getAttribute("endereco");
+                        String tipo = empregadoElement.getAttribute("tipo");
+                        String salario = empregadoElement.getAttribute("salario");
+                        String comissao = empregadoElement.getAttribute("comissao");
+                        String indice = empregadoElement.getAttribute("indice");
+
+                        Empregado empregado = new Empregado(nome, endereco, tipo, salario, id);
+                        if(!comissao.equals("")){
+                            empregado.setComissao(comissao);
+                        }
+
+
+                        this.empregados.put(id,empregado);
+                    }
+
+                    this.funcao = Boolean.TRUE;
+                }
+            } catch (ParserConfigurationException | IOException | SAXException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
     public String setEmpregado(String nome, String endereco, String tipo, String salario) throws ValidacaoException {
@@ -67,7 +201,6 @@ public class System {
             this.empregados.put(id, empregado);
             EmpregadoServices.verificarIndicesEmpregado(empregado, this.empregados, empregado.getId());
 
-            print.printarTeste("Dentro do setempregado: " + id.toString());
 
 
             return id;
@@ -90,6 +223,11 @@ public class System {
     }
 
     public String getEmpregadoPorNome(String nome, Integer indice) throws EmpregadoNaoExisteNomeException{
+        Printar print = new Printar();
+        if(file.exists()){
+            recuperarDadosEmpregado();
+        }
+//        print.printarTeste("oi?" + this.empregados.containsKey());
         return EmpregadoServices.verificarPorNome(nome, this.empregados, indice);
     }
 
@@ -329,14 +467,15 @@ public class System {
     }
 
     public Sindicato getSindicato(String membro){
-        if(!this.sindicatos.containsKey(membro)){
-            throw new RuntimeException("FODA-SEEE");
-        } else if(membro == null){
-            throw new RuntimeException("caguei");
+
+        for(Map.Entry<String, Empregado> empregado : empregados.entrySet()){
+
         }
 
 
-        return this.sindicatos.get(membro);
+
+
+        return null;
     }
 
     public void lancaServico(String membro, String dataString, String valorString) throws HorasNulasException, DataInvalidaException {

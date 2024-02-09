@@ -5,18 +5,21 @@ import br.ufal.ic.p2.wepayu.Exception.EmpregadoNaoExisteNomeException;
 import br.ufal.ic.p2.wepayu.Exception.VerificarErros.AtributoNuloException;
 import br.ufal.ic.p2.wepayu.Exception.VerificarErros.AtributoTipoNaoAplicavelException;
 import br.ufal.ic.p2.wepayu.Exception.VerificarErros.AtributoTipoNaoValido;
+import br.ufal.ic.p2.wepayu.System;
 import br.ufal.ic.p2.wepayu.models.Empregado;
 import br.ufal.ic.p2.wepayu.models.Printar;
 
 import java.util.Map;
 
 public class EmpregadoServices {
+
     public static void verificarIndicesEmpregado(Empregado empregado , Map<String, Empregado> empregados, String id){
         empregado.setIndice(verificarPorNome(empregado.getNome(),empregados, id));
     }
 
     public static Integer verificarPorNome(String nome, Map<String, Empregado> empregados, String id){
-        Integer indice = 0;
+        Printar print  = new Printar();
+        int indice = 0;
         for (Map.Entry<String, Empregado> entry : empregados.entrySet()) {
             if (entry.getValue().getNome().equals(nome)) {
                 indice+=1;
@@ -31,10 +34,13 @@ public class EmpregadoServices {
 
 
     public static String verificarPorNome(String nome, Map<String, Empregado> empregados, Integer indice) throws EmpregadoNaoExisteNomeException {
-        Printar print = new Printar();
+        Printar print  = new Printar();
+
+        print.printarTeste("NOME: ");
 
         for (Map.Entry<String, Empregado> entry : empregados.entrySet()) {
             if (entry.getValue().getNome().equals(nome) && entry.getValue().getIndice().equals(indice)) {
+                print.printarTeste("NOME: " + entry.getValue().getNome());
                 return entry.getValue().getId();
             }
         }

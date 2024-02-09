@@ -7,6 +7,9 @@
 # User Story de remocao de empregado (teste de persistencia)
 
 expectError "Nao ha empregado com esse nome." getEmpregadoPorNome nome="Joao da Silva" indice=1
+id1=criarEmpregado nome="Joao da Silva" endereco="Rua dos Jooes, 333 - Campina Grande" \
+	tipo=horista salario=23
+
 
 id2=criarEmpregado nome="Maria" endereco="Rua dos Jooes, 333 - Campina Grande" \
 	tipo=horista salario=23

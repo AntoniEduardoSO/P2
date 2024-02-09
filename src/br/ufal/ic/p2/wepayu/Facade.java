@@ -2,6 +2,7 @@ package br.ufal.ic.p2.wepayu;
 
 
 
+import java.io.File;
 import java.util.*;
 
 import br.ufal.ic.p2.wepayu.Exception.*;
@@ -16,12 +17,14 @@ public class Facade {
     private br.ufal.ic.p2.wepayu.System system = new System();
 
 
+
+
     public void zerarSistema(){
         this.system.zerarSistema();
     }
 
     public void encerrarSistema(){
-
+        this.system.encerrarSistema();
     }
 
 

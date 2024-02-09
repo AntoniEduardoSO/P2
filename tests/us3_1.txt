@@ -6,6 +6,16 @@
 
 # User Story de lancamento de cartao de ponto (persistencia)
 
+id1=criarEmpregado nome="Joao da Silva" endereco="Rua dos Jooes, 333 - Campina Grande" \
+	tipo=horista salario=23
+id2=criarEmpregado nome="Mariazinha" endereco="Rua das Marias, 333 - Campina Grande" \
+	tipo=horista salario=2300
+
+	lancaCartao emp=${id1} data=1/1/2005 horas=8
+    lancaCartao emp=${id1} data=2/1/2005 horas=8,5
+    lancaCartao emp=${id1} data=3/1/2005 horas=9
+    lancaCartao emp=${id1} data=4/1/2005 horas=6
+    lancaCartao emp=${id2} data=3/1/2005 horas=10
 
 
 id1=getEmpregadoPorNome nome="Joao da Silva" indice=1

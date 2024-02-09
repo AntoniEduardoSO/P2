@@ -10,8 +10,9 @@ import java.util.ArrayList;
 import br.ufal.ic.p2.wepayu.models.Vendas;
 import br.ufal.ic.p2.wepayu.models.Sindicato;
 
-import javax.swing.text.StyledEditorKit;
 
+
+import javax.swing.text.StyledEditorKit;
 public class Empregado {
     private String id;
     private String nome;
@@ -21,7 +22,7 @@ public class Empregado {
 
     private String comissao;
 
-    private Sindicato sindicato;
+    private Sindicato sindicato = new Sindicato();
     // Data e Horas
     private Map<LocalDate, Double> cartoesPonto = new HashMap<>();
 
@@ -38,13 +39,79 @@ public class Empregado {
         this.id = id;
     }
 
-    public void setLancaVendas(Vendas vendas){
-        listaVendas.add(vendas);
+    public String getId() {
+        return this.id;
+    }
+    public String getNome() {
+        return nome;
+    }
+
+    public String getEndereco() {
+        return endereco;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public String getSalario() {
+        if(!this.salario.contains(",")){
+            this.salario += ",00";
+        }
+        return this.salario;
+    }
+
+    public String getComissao() {
+        return comissao;
+    }
+
+
+    public String getAtributo(String atributo) throws  AtributoNaoExisteException {
+        switch (atributo){
+            case "nome":
+                return this.getNome();
+
+            case "tipo":
+                return this.getTipo();
+
+            case "endereco":
+                return this.getEndereco();
+
+            case "salario":
+                return this.getSalario();
+
+            case "sindicalizado":
+                return String.valueOf(this.sindicato.getValor());
+
+            case "comissao":
+                return this.getComissao();
+
+
+            default:
+                throw new AtributoNaoExisteException();
+        }
+    }
+
+    public Sindicato getSindicalizado() {
+        return this.sindicato;
+    }
+
+    public Map<LocalDate, Double> getCartoesPonto() {
+        return cartoesPonto;
     }
 
     public List<Vendas> getLancaVendas(){
         return this.listaVendas;
     }
+
+
+
+
+
+    public void setLancaVendas(Vendas vendas){
+        listaVendas.add(vendas);
+    }
+
 
     public String lancaVendas(LocalDate dataInicial, LocalDate dataFinal) {
         double totalVendasDia = 0;
@@ -83,9 +150,6 @@ public class Empregado {
         this.id = id;
     }
 
-    public String getId() {
-        return this.id;
-    }
 
     public Integer getIndice(){
         return this.indice;
@@ -108,66 +172,9 @@ public class Empregado {
 
     }
 
-    public Map<LocalDate, Double> getCartoesPonto() {
-        return cartoesPonto;
-    }
-
-    public String getAtributo(String atributo) throws  AtributoNaoExisteException {
-        switch (atributo){
-            case "nome":
-                return this.getNome();
-
-            case "tipo":
-                return this.getTipo();
-
-            case "endereco":
-                return this.getEndereco();
-
-            case "salario":
-                return this.getSalario();
-
-            case "sindicalizado":
-                return String.valueOf(this.sindicato.getValor());
-
-            case "comissao":
-                return this.getComissao();
-
-
-            default:
-                throw new AtributoNaoExisteException();
-        }
-    }
-
-    public Sindicato getSindicalizado() {
-        return this.sindicato;
-    }
 
     public void setComissao(String comissao){
         this.comissao = comissao;
     }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public String getEndereco() {
-        return endereco;
-    }
-
-    public String getTipo() {
-        return tipo;
-    }
-
-    public String getSalario() {
-        if(!this.salario.contains(",")){
-            this.salario += ",00";
-        }
-        return this.salario;
-    }
-
-    public String getComissao() {
-        return comissao;
-    }
-
 
 }
