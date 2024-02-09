@@ -25,9 +25,8 @@ public class Empregado {
 
     private final List<Vendas> listaVendas = new ArrayList<>();
 
-    private Banco banco;
+    private Pagamento pagamento = new Pagamento();
 
-    private String metodoDePagamento;
 
     public Empregado(String nome, String endereco, String tipo, String salario, String id) {
         this.nome = nome;
@@ -36,7 +35,7 @@ public class Empregado {
         this.salario = salario;
         this.sindicato.setValor(Boolean.FALSE);
         this.id = id;
-        this.metodoDePagamento = "";
+        this.getPagamento().setMetodoDePagamento("emMaos");
     }
 
     public String getId() {
@@ -102,22 +101,26 @@ public class Empregado {
                 return this.sindicato.getTaxaSindical();
 
             case "banco":
-                if(!this.metodoDePagamento.equals("banco")){
+                if(!this.getPagamento().getMetodoDePagamento().equals("banco")){
                     throw new NullPointerException("Empregado nao recebe em banco.");
                 }
-                return this.banco.getBanco();
+                return this.pagamento.getBanco();
 
             case "agencia":
-                if(!this.metodoDePagamento.equals("banco")){
+                if(!this.getPagamento().getMetodoDePagamento().equals("banco")){
                     throw new NullPointerException("Empregado nao recebe em banco.");
                 }
-                return this.banco.getAgencia();
+                return this.pagamento.getAgencia();
 
             case "contaCorrente":
-                if(!this.metodoDePagamento.equals("banco")){
+                if(!this.getPagamento().getMetodoDePagamento().equals("banco")){
                     throw new NullPointerException("Empregado nao recebe em banco.");
                 }
-                return this.banco.getAgencia();
+                return this.pagamento.getContaCorrente();
+
+
+            case "metodoPagamento":
+                return this.pagamento.getMetodoDePagamento();
 
             default:
                 throw new AtributoNaoExisteException();
@@ -136,12 +139,12 @@ public class Empregado {
         return this.listaVendas;
     }
 
-    public Banco getBanco() {
-        return banco;
+    public Pagamento getPagamento() {
+        return pagamento;
     }
 
-    public String getMetodoDePagamento() {
-        return metodoDePagamento;
+    public void setPagamento(Pagamento pagamento)  {
+        this.pagamento = pagamento;
     }
 
     public void setSindicato(Sindicato sindicato){
@@ -212,7 +215,12 @@ public class Empregado {
     }
 
 
-    public void setComissao(String comissao){
+    public void setComissao(String comissao) throws AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
+        if (comissao.contains("-")) {
+            throw new AtributoNumericoNegativoException("Comissao");
+        }  else if (comissao.matches(".*[a-zA-Z].*")) {
+            throw new AtributoNumericoNaoNumericoException("Comissao");
+        }
         this.comissao = comissao;
     }
 
@@ -232,11 +240,8 @@ public class Empregado {
         this.tipo = tipo;
     }
 
-    public void setBanco(Banco banco) {
-        this.banco = banco;
+    public void setMetodo(Pagamento banco) {
+        this.pagamento = banco;
     }
 
-    public void setMetodoDePagamento(String metodoDePagamento) {
-        this.metodoDePagamento = metodoDePagamento;
-    }
 }

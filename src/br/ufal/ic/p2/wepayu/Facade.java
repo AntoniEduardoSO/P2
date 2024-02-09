@@ -40,7 +40,7 @@ public class Facade {
         return this.system.getAtributoEmpregado(id, atributo);
     }
 
-    public String getEmpregadoPorNome(String nome, Integer indice) throws EmpregadoNaoExisteNomeException{
+    public String getEmpregadoPorNome(String nome, Integer indice) throws EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
         return this.system.getEmpregadoPorNome(nome, indice);
     }
 
@@ -73,6 +73,14 @@ public class Facade {
     }
     public void alteraEmpregado(String id, String atributo, boolean valor, String idSindicato, String taxaSindical) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException, AtributoValorException {
         this.system.alteraEmpregado(id,atributo,valor, idSindicato,taxaSindical);
+    }
+
+    public void alteraEmpregado(String id, String atributo, String valor1, String banco, String agencia, String contaCorrente) throws EmpregadoNaoExisteNomeException, EmpregadoNaoExisteException, IdEmpregadoNuloException {
+        this.system.alteraEmpregado(id,atributo,valor1, banco,agencia,contaCorrente);
+    }
+
+    public void alteraEmpregado(String id, String atributo, String valor, String comissao) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
+        this.system.alteraEmpregado(id,atributo,valor,comissao);
     }
 
     public void lancaTaxaServico(String membro, String data, String valor) throws HorasNulasException, DataInvalidaException, AtributoNumericoNegativoException, AtributoValorException, AtributoNumericoNaoNumericoException {

@@ -76,6 +76,13 @@ public class Sindicato {
     }
 
     public String getTaxaSindical() {
-        return taxaSindical;
+        if(!this.taxaSindical.contains(",")){
+            this.taxaSindical += ",00";
+        }
+        return this.taxaSindical;
+    }
+
+    public void setTaxaSindical(String taxaSindical) {
+        this.taxaSindical = taxaSindical;
     }
 }

@@ -1,14 +1,20 @@
 package br.ufal.ic.p2.wepayu.models;
 
-public class Banco {
+public class Pagamento {
+
+    String valor1;
     String banco;
     String agencia;
     String contaCorrente;
 
-    public Banco(String banco, String agencia, String contaCorrente){
-        this.banco = banco;
-        this.agencia = agencia;
-        this.contaCorrente = contaCorrente;
+    String metodoDePagamento;
+
+    public Pagamento(String valor1){
+        this.valor1 = valor1;
+    }
+
+    public Pagamento() {
+
     }
 
     public String getBanco() {
@@ -23,6 +29,15 @@ public class Banco {
         return contaCorrente;
     }
 
+
+    public String getMetodoDePagamento() {
+        return metodoDePagamento;
+    }
+
+    public String getValor1() {
+        return valor1;
+    }
+
     public void setBanco(String banco) {
         this.banco = banco;
     }
@@ -33,5 +48,13 @@ public class Banco {
 
     public void setContaCorrente(String contaCorrente) {
         this.contaCorrente = contaCorrente;
+    }
+
+    public void setMetodoDePagamento(String metodoDePagamento) {
+        this.metodoDePagamento = metodoDePagamento;
+    }
+
+    public void setValor1(String valor1) {
+        this.valor1 = valor1;
     }
 }
