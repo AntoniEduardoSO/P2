@@ -135,6 +135,8 @@ lancaVenda emp=${id11} data=2/2/2005 valor=500
 lancaVenda emp=${id11} data=1/12/2005 valor=600
 lancaVenda emp=${id11} data=2/12/2005 valor=800
 
+# salario*12/52. 1500
+
 # empregado commisionado, com vendas, com sindicato, com taxas adicionais
 id12=criarEmpregado nome="Maite Proenca" endereco="end12" tipo=comissionado salario=1600,00 comissao=0,14
 alteraEmpregado emp=${id12} atributo=sindicalizado valor=true idSindicato=s128 taxaSindical=1,00
@@ -212,7 +214,8 @@ expect 0,00 totalFolha data=15/2/2005
 expect 0,00 totalFolha data=16/2/2005
 expect 0,00 totalFolha data=17/2/2005
 expect 0,00 totalFolha data=18/2/2005
-rodaFolha data=18/2/2005 saida=folha-2005-02-18.txt
+rodaFolha data=18/2/2005 saida=folha-2005
+-02-18.txt
 equalFiles file1=ok/folha-2005-02-18.txt file2=folha-2005-02-18.txt
 expect 0,00 totalFolha data=19/2/2005
 expect 0,00 totalFolha data=20/2/2005

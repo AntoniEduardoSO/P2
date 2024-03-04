@@ -90,4 +90,12 @@ public class Facade {
     public String getTaxasServico(String id, String dataInicial, String dataFinal) throws DataInvalidaException, EmpregadoNaoExisteNomeException, EmpregadoNaoExisteException, IdEmpregadoNuloException, DataInicialMaiorException {
         return this.system.getTaxasServico(id,dataInicial,dataFinal);
     }
+
+    public String totalFolha(String data) throws DataInvalidaException {
+        return this.system.totalFolha(data);
+    }
+
+    public void rodaFolha(String data, String saida) throws DataInvalidaException{
+        this.system.rodaFolha(data, saida);
+    }
 }

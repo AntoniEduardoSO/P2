@@ -3,10 +3,7 @@ package br.ufal.ic.p2.wepayu.models;
 import br.ufal.ic.p2.wepayu.Exception.VerificarErros.*;
 
 import java.time.LocalDate;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 public class Empregado {
     private String id;
@@ -19,7 +16,7 @@ public class Empregado {
 
     private Sindicato sindicato = new Sindicato();
     // Data e Horas
-    private Map<LocalDate, Double> cartoesPonto = new HashMap<>();
+    private Map<LocalDate, Double> cartoesPonto = new LinkedHashMap<>();
 
     private Integer indice;
 

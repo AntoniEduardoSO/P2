@@ -1,12 +1,15 @@
 package br.ufal.ic.p2.wepayu;
 
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.io.File;
 
 import org.w3c.dom.Document;
@@ -39,6 +42,8 @@ public class System {
     private Map<String, Empregado> empregados = new LinkedHashMap<>();
     File file = new File("./database/empregados.xml");
     private Boolean funcao = Boolean.FALSE;
+
+    private Map<LocalDate, CartaoDePonto> cartoesDePontos = new LinkedHashMap<>();
 
 
     public void zerarSistema() {
@@ -549,9 +554,27 @@ public class System {
             if (caractere == '/') {
                 contadorBarras++;
                 if (contadorBarras == 1) {
-                    formato += (i == 1) ? "d/" : "dd/";
+                    if(i == 1){
+                        formato+= "d/";
+                    } else{
+                        formato+= "dd/";
+                    }
+
                 } else if (contadorBarras == 2) {
-                    formato += (i == 3) ? "M/" : "MM/";
+                    if(formato.equals("d/")){
+                        if(i == 3){
+                            formato += "M/";
+                        } else{
+                            formato +="MM/";
+                        }
+                    } else{
+                        if(i == 4){
+                            formato += "M/";
+                        } else{
+                            formato +="MM/";
+                        }
+                    }
+
                 }
             }
         }
@@ -770,6 +793,35 @@ public class System {
         sindicato.setListaServico(servico);
     }
 
+    public String totalFolha(String dataString) throws DataInvalidaException {
+        LocalDate data = verifica_data_valida("data_cartao", dataString);
+        CalculoFolha calculoFolha = new CalculoFolha();
+        return calculoFolha.puxaFolha(data, this.empregados, this.cartoesDePontos);
+    }
+
+    public void rodaFolha(String dataString, String saida) throws DataInvalidaException {
+        LocalDate data = verifica_data_valida("data_cartao", dataString);
+        CartaoDePonto cartaoDePonto = this.cartoesDePontos.get(data);
 
 
+        String nomeArquivo = "./ok/folha-" + saida;
+
+        try {
+            // Cria o diretório se ele não existir
+            File diretorio = new File("WePayU/ok");
+            if (!diretorio.exists()) {
+                diretorio.mkdirs();
+            }
+
+            // Cria o arquivo se ele não existir
+            File arquivo = new File(diretorio, nomeArquivo);
+            if (!arquivo.exists()) {
+                arquivo.createNewFile();
+            } else {
+
+            }
+        } catch (IOException e) {
+        }
+
+    }
 }
