@@ -140,6 +140,7 @@ public class Empregado {
         return pagamento;
     }
 
+
     public void setPagamento(Pagamento pagamento)  {
         this.pagamento = pagamento;
     }

@@ -1,22 +1,48 @@
 package br.ufal.ic.p2.wepayu.models;
 
-import java.time.LocalDate;
+import java.util.LinkedList;
+import java.util.List;
 
-public class CartaoDePonto {
+public class FolhaDePonto {
+    List<Assalariado> assalariadoList = new LinkedList<>();
+    List<Horista> horistaList = new LinkedList<>();
 
-    String salario_bruto;
+    List<Comissionado> comissionadoList = new LinkedList<>();
 
-    public CartaoDePonto(String sala_bruto){
-        this.salario_bruto = sala_bruto;
+    String salarioBrutoTotal;
+
+//    public FolhaDePonto(String salarioBrutoTotal){
+//        this.salarioBrutoTotal = salarioBrutoTotal;
+//    }
+
+
+    public List<Assalariado> getAssalariadoList() {
+        return assalariadoList;
     }
 
-
-    public String getSalario_bruto() {
-        return salario_bruto;
+    public List<Horista> getHoristaList() {
+        return horistaList;
     }
 
+    public List<Comissionado> getComissionadoList() {
+        return comissionadoList;
+    }
 
-    public void setSalario_bruto(String salario_bruto) {
-        this.salario_bruto = salario_bruto;
+    public String getSalarioBrutoTotal() {return salarioBrutoTotal;}
+
+    public void setSalarioBrutoTotal(String salarioBrutoTotal) {
+        this.salarioBrutoTotal = salarioBrutoTotal;
+    }
+
+    public void setAssalariadoList(List<Assalariado> assalariadoList) {
+        this.assalariadoList = assalariadoList;
+    }
+
+    public void setHoristaList(Horista horista) {
+        this.horistaList.add(horista) ;
+    }
+
+    public void setComissionadoList(List<Comissionado> comissionadoList) {
+        this.comissionadoList = comissionadoList;
     }
 }

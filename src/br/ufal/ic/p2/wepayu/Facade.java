@@ -95,7 +95,7 @@ public class Facade {
         return this.system.totalFolha(data);
     }
 
-    public void rodaFolha(String data, String saida) throws DataInvalidaException{
-        this.system.rodaFolha(data, saida);
-    }
+//    public void rodaFolha(String data, String saida) throws DataInvalidaException{
+//        this.system.rodaFolha(data, saida);
+//    }
 }

@@ -43,7 +43,7 @@ public class System {
     File file = new File("./database/empregados.xml");
     private Boolean funcao = Boolean.FALSE;
 
-    private Map<LocalDate, CartaoDePonto> cartoesDePontos = new LinkedHashMap<>();
+    private Map<LocalDate, FolhaDePonto> folhaDePontos = new LinkedHashMap<>();
 
 
     public void zerarSistema() {
@@ -51,8 +51,8 @@ public class System {
         this.empregados = new LinkedHashMap<>();
     }
 
-    public void encerrarSistema(){
-        Printar print =  new Printar();
+    public void encerrarSistema() {
+        Printar print = new Printar();
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try {
             DocumentBuilder builder = factory.newDocumentBuilder();
@@ -76,12 +76,11 @@ public class System {
                 empregadoElement.setAttribute("indice", empregado.getIndice().toString());
 
                 Element sindicatoElement = doc.createElement("sindicato");
-                if(empregado.getSindicalizado().getValor() == Boolean.TRUE) {
+                if (empregado.getSindicalizado().getValor() == Boolean.TRUE) {
                     sindicatoElement.setAttribute("sindicato_id", empregado.getSindicalizado().getId());
                     sindicatoElement.setAttribute("valor", String.valueOf(empregado.getSindicalizado().getValor()));
                     sindicatoElement.setAttribute("taxaSindical", String.valueOf(empregado.getSindicalizado().getTaxaSindical()));
-                }
-                else{
+                } else {
                     sindicatoElement.setAttribute("valor", String.valueOf(empregado.getSindicalizado().getValor()));
                 }
 
@@ -98,8 +97,6 @@ public class System {
                 empregadoElement.appendChild(pagamentoElemnt);
 
 
-
-
                 for (Map.Entry<LocalDate, Double> cartao : empregado.getCartoesPonto().entrySet()) {
                     LocalDate data = cartao.getKey();
                     Double horas = cartao.getValue();
@@ -109,7 +106,7 @@ public class System {
                     empregadoElement.appendChild(cartaoElement);
                 }
 
-                for(Vendas venda : empregado.getLancaVendas()){
+                for (Vendas venda : empregado.getLancaVendas()) {
                     LocalDate data = venda.getData();
                     Double valor = venda.getValor();
                     Element vendaElement = doc.createElement("venda");
@@ -118,7 +115,7 @@ public class System {
                     empregadoElement.appendChild(vendaElement);
                 }
 //
-                for(Servico servico : empregado.getSindicalizado().getLancaServico()){
+                for (Servico servico : empregado.getSindicalizado().getLancaServico()) {
                     LocalDate data = servico.getData();
                     String valor = servico.getValor();
                     Element servicoElement = doc.createElement("servico");
@@ -126,7 +123,6 @@ public class System {
                     servicoElement.setAttribute("valor", valor);
                     empregadoElement.appendChild(servicoElement);
                 }
-
 
 
                 rootElement.appendChild(empregadoElement);
@@ -146,7 +142,7 @@ public class System {
     }
 
     public void recuperarDadosEmpregado() throws HorasNulasException, EmpregadoNaoExisteNomeException, EmpregadoNaoExisteException, IdEmpregadoNuloException, TipoInvalidoCartaoDePontoException, DataInvalidaException, TipoInvalidoLancaVendasException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
-        if(this.funcao.equals(Boolean.FALSE)){
+        if (this.funcao.equals(Boolean.FALSE)) {
             try {
                 Printar print = new Printar();
                 DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -160,7 +156,7 @@ public class System {
                 for (int i = 0; i < empregadoNodes.getLength(); i++) {
                     Node empregadoNode = empregadoNodes.item(i);
 
-                    if ( empregadoNode.getNodeType() == Node.ELEMENT_NODE) {
+                    if (empregadoNode.getNodeType() == Node.ELEMENT_NODE) {
                         Element empregadoElement = (Element) empregadoNode;
 
                         String id = empregadoElement.getAttribute("id");
@@ -172,8 +168,8 @@ public class System {
                         String indice = empregadoElement.getAttribute("indice");
 
                         Empregado empregado = new Empregado(nome, endereco, tipo, salario, id);
-                        if(!comissao.equals("")) empregado.setComissao(comissao);
-                        empregado.setIndice( Integer.parseInt(indice));
+                        if (!comissao.equals("")) empregado.setComissao(comissao);
+                        empregado.setIndice(Integer.parseInt(indice));
 
 
                         NodeList children = empregadoElement.getChildNodes();
@@ -192,8 +188,7 @@ public class System {
                                     empregado.getSindicalizado().setTaxaSindical(taxaSindical);
 
 
-
-                                } else if(tagName.equals("pagamento")){
+                                } else if (tagName.equals("pagamento")) {
                                     String valor1 = childElement.getAttribute("valor1");
                                     String banco = childElement.getAttribute("banco");
                                     String agencia = childElement.getAttribute("agencia");
@@ -216,7 +211,7 @@ public class System {
 
                                     LocalDate data = LocalDate.parse(dataString, formatter);
 
-                                    empregado.adicionarCartaoPonto(data,Double.parseDouble(horas));
+                                    empregado.adicionarCartaoPonto(data, Double.parseDouble(horas));
 //
 
 
@@ -227,7 +222,7 @@ public class System {
 
                                     LocalDate data = LocalDate.parse(dataString, formatter);
 
-                                    Vendas vendas = new Vendas( data, Double.parseDouble(valor));
+                                    Vendas vendas = new Vendas(data, Double.parseDouble(valor));
                                     empregado.setLancaVendas(vendas);
 
                                 } else if (tagName.equals("servico")) {
@@ -243,7 +238,7 @@ public class System {
                             }
                         }
 
-                        this.empregados.put(id,empregado);
+                        this.empregados.put(id, empregado);
                     }
 
                     this.funcao = Boolean.TRUE;
@@ -291,7 +286,6 @@ public class System {
             EmpregadoServices.verificarIndicesEmpregado(empregado, this.empregados, empregado.getId());
 
 
-
             return id;
         } catch (AtributoNumericoNaoNumericoException | AtributoNumericoNegativoException | AtributoNuloException |
                  AtributoTipoNaoValido | AtributoTipoNaoAplicavelException e) {
@@ -313,7 +307,7 @@ public class System {
 
     public String getEmpregadoPorNome(String nome, Integer indice) throws EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
         Printar print = new Printar();
-        if(file.exists()){
+        if (file.exists()) {
             try {
                 recuperarDadosEmpregado();
             } catch (HorasNulasException e) {
@@ -346,33 +340,31 @@ public class System {
 
     public void verificarErrosNumericosServico(String valor) throws AtributoValorException {
         Printar print = new Printar();
-        if(valor.isEmpty()){
+        if (valor.isEmpty()) {
             throw new NullPointerException("Valor pode ser nulo.");
-        } else if(valor.equals("0")){
+        } else if (valor.equals("0")) {
             throw new AtributoValorException("Valor deve ser positivo.");
         } else if (valor.contains("-")) {
             throw new AtributoValorException("Valor deve ser positivo.");
         } else if (valor.matches(".*[a-zA-Z].*")) {
             throw new AtributoValorException("Valor deve ser numerico.");
-        }
-        else if(valor.contains(",")){
-            valor+="0";
+        } else if (valor.contains(",")) {
+            valor += "0";
         }
     }
 
     public void verificarErrosNumericosSindicato(String valor) throws AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException, AtributoValorException {
         Printar print = new Printar();
-        if(valor.isEmpty()){
+        if (valor.isEmpty()) {
             throw new NullPointerException("Taxa sindical nao pode ser nula.");
-        } else if(valor.equals("0")){
+        } else if (valor.equals("0")) {
             throw new AtributoValorException("Valor deve ser positivo.");
         } else if (valor.contains("-")) {
             throw new AtributoValorException("Taxa sindical deve ser nao-negativa.");
         } else if (valor.matches(".*[a-zA-Z].*")) {
             throw new AtributoValorException("Taxa sindical deve ser numerica.");
-        }
-        else if(valor.contains(",")){
-            valor+="0";
+        } else if (valor.contains(",")) {
+            valor += "0";
         }
     }
 
@@ -472,7 +464,7 @@ public class System {
         return String.valueOf(horasTotaisFormatadas);
     }
 
-    public String getVendasRealizadas(String id, String dataInicialString, String dataFinalString) throws DataInvalidaException, EmpregadoNaoExisteException, IdEmpregadoNuloException, TipoInvalidoLancaVendasException, DataInicialMaiorException, EmpregadoNaoExisteNomeException{
+    public String getVendasRealizadas(String id, String dataInicialString, String dataFinalString) throws DataInvalidaException, EmpregadoNaoExisteException, IdEmpregadoNuloException, TipoInvalidoLancaVendasException, DataInicialMaiorException, EmpregadoNaoExisteNomeException {
         double valor = 0;
         Empregado empregado = getEmpregado(id);
         LocalDate dataInicial = verifica_data_valida("data_inicial", dataInicialString);
@@ -484,13 +476,14 @@ public class System {
             throw new DataInicialMaiorException();
         }
 
-        return empregado.lancaVendas(dataInicial,dataFinal);
+        return empregado.lancaVendas(dataInicial, dataFinal);
     }
+
     public String getTaxasServico(String id, String dataInicialString, String dataFinalString) throws DataInvalidaException, EmpregadoNaoExisteNomeException, EmpregadoNaoExisteException, IdEmpregadoNuloException, DataInicialMaiorException {
         double valor = 0;
         Empregado empregado = getEmpregado(id);
 
-        if(empregado.getSindicalizado().getValor() == Boolean.FALSE){
+        if (empregado.getSindicalizado().getValor() == Boolean.FALSE) {
             throw new NullPointerException("Empregado nao eh sindicalizado.");
         }
 
@@ -524,7 +517,7 @@ public class System {
         empregado.adicionarCartaoPonto(data, horas);
     }
 
-    public void lancaVenda(String id, String dataString, String valorString)  throws EmpregadoNaoExisteException, IdEmpregadoNuloException, DataInvalidaException, TipoInvalidoLancaVendasException, HorasNulasException, EmpregadoNaoExisteNomeException{
+    public void lancaVenda(String id, String dataString, String valorString) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, DataInvalidaException, TipoInvalidoLancaVendasException, HorasNulasException, EmpregadoNaoExisteNomeException {
         Empregado empregado = getEmpregado(id);
         valorString = valorString.replace(',', '.');
         double valor = Double.parseDouble(valorString);
@@ -533,12 +526,12 @@ public class System {
             throw new TipoInvalidoLancaVendasException();
         }
 
-        if(valor <= 0 ){
+        if (valor <= 0) {
             throw new HorasNulasException("Valor deve ser positivo.");
         }
 
         LocalDate data = verifica_data_valida("data_cartao", dataString);
-        Vendas vendas = new Vendas(data,valor);
+        Vendas vendas = new Vendas(data, valor);
 
         empregado.setLancaVendas(vendas);
     }
@@ -554,24 +547,24 @@ public class System {
             if (caractere == '/') {
                 contadorBarras++;
                 if (contadorBarras == 1) {
-                    if(i == 1){
-                        formato+= "d/";
-                    } else{
-                        formato+= "dd/";
+                    if (i == 1) {
+                        formato += "d/";
+                    } else {
+                        formato += "dd/";
                     }
 
                 } else if (contadorBarras == 2) {
-                    if(formato.equals("d/")){
-                        if(i == 3){
+                    if (formato.equals("d/")) {
+                        if (i == 3) {
                             formato += "M/";
-                        } else{
-                            formato +="MM/";
+                        } else {
+                            formato += "MM/";
                         }
-                    } else{
-                        if(i == 4){
+                    } else {
+                        if (i == 4) {
                             formato += "M/";
-                        } else{
-                            formato +="MM/";
+                        } else {
+                            formato += "MM/";
                         }
                     }
 
@@ -611,23 +604,23 @@ public class System {
         Empregado empregado = getEmpregado(id);
 
 
-        switch (atributo){
+        switch (atributo) {
             case "sindicalizado":
-                if(!valor.equals("false") || valor.equals("true") ){
+                if (!valor.equals("false") || valor.equals("true")) {
                     throw new NullPointerException("Valor deve ser true ou false.");
                 }
                 empregado.getSindicalizado().setValor(Boolean.parseBoolean(valor));
                 break;
 
             case "nome":
-                if(valor.isEmpty()){
+                if (valor.isEmpty()) {
                     throw new NullPointerException("Nome nao pode ser nulo.");
                 }
                 empregado.setNome(valor);
                 break;
 
             case "salario":
-                if(valor.isEmpty()){
+                if (valor.isEmpty()) {
                     throw new NullPointerException("Salario nao pode ser nulo.");
                 }
 
@@ -636,44 +629,43 @@ public class System {
                 break;
 
             case "tipo":
-                if(valor.equals("abc")){
+                if (valor.equals("abc")) {
                     throw new NullPointerException("Tipo invalido.");
                 }
                 empregado.setTipo(valor);
                 break;
 
             case "comissao":
-                if(valor.isEmpty()){
+                if (valor.isEmpty()) {
                     throw new NullPointerException("Comissao nao pode ser nula.");
                 }
-                if(!empregado.getTipo().equals("comissionado")){
-                   throw new NullPointerException("Empregado nao eh comissionado.");
+                if (!empregado.getTipo().equals("comissionado")) {
+                    throw new NullPointerException("Empregado nao eh comissionado.");
                 }
 
                 empregado.setComissao(valor);
                 break;
 
             case "endereco":
-                if(valor.isEmpty()){
+                if (valor.isEmpty()) {
                     throw new NullPointerException("Endereco nao pode ser nulo.");
                 }
                 empregado.setEndereco(valor);
                 break;
 
             case "metodoPagamento":
-                if(valor.equals("abc")){
+                if (valor.equals("abc")) {
                     throw new NullPointerException("Metodo de pagamento invalido.");
                 }
                 empregado.getPagamento().setMetodoDePagamento(valor);
                 break;
 
             case "contaCorrente":
-                if(valor.isEmpty()){
+                if (valor.isEmpty()) {
                     throw new NullPointerException("Conta corrente nao pode ser nulo.");
                 }
                 empregado.getPagamento().setContaCorrente(valor);
                 break;
-
 
 
             default:
@@ -684,23 +676,22 @@ public class System {
     public void alteraEmpregado(String id, String atributo, String valor, String comissao) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
         Empregado empregado = getEmpregado(id);
 
-        if(valor.equals("abc")){
+        if (valor.equals("abc")) {
             throw new NullPointerException("Tipo nao aplicavel");
         }
 
 
-        switch (atributo){
+        switch (atributo) {
 
             case "tipo":
                 empregado.setTipo(valor);
 
 
-
-                if(valor.equals("comissionado")){
+                if (valor.equals("comissionado")) {
                     empregado.setComissao(comissao);
-                } else if(valor.equals("horista")){
+                } else if (valor.equals("horista")) {
                     empregado.setSalario(comissao);
-                } else if(valor.equals("assalariado")){
+                } else if (valor.equals("assalariado")) {
                     empregado.setSalario(valor);
                 }
 
@@ -717,32 +708,31 @@ public class System {
 
         verificarErrosNumericosSindicato(taxaSindicalString);
 
-        for(Map.Entry<String, Empregado> entry : empregados.entrySet()){
-            if(entry.getValue().getSindicalizado().getValor() == Boolean.TRUE){
-                if(entry.getValue().getSindicalizado().getId().equals(idSindicato)){
+        for (Map.Entry<String, Empregado> entry : empregados.entrySet()) {
+            if (entry.getValue().getSindicalizado().getValor() == Boolean.TRUE) {
+                if (entry.getValue().getSindicalizado().getId().equals(idSindicato)) {
                     throw new NullPointerException("Ha outro empregado com esta identificacao de sindicato");
                 }
             }
         }
 
-        if(idSindicato.isEmpty()){
+        if (idSindicato.isEmpty()) {
             throw new NullPointerException("Identificacao do sindicato nao pode ser nula.");
         }
 
         verificarErrosNumericosSindicato(taxaSindicalString);
 
-        Sindicato sindicato = new Sindicato(idSindicato,taxaSindicalString);
+        Sindicato sindicato = new Sindicato(idSindicato, taxaSindicalString);
         empregado.setSindicato(sindicato);
 
     }
 
 
-
     public void alteraEmpregado(String id, String atributo, String valor1, String banco, String agencia, String contaCorrente) throws EmpregadoNaoExisteNomeException, EmpregadoNaoExisteException, IdEmpregadoNuloException {
         Empregado empregado = getEmpregado(id);
-        if(atributo.equals("metodoPagamento")){
-            if(valor1.equals("banco")){
-                vericaErrosMetodoDePagamento(banco,agencia,contaCorrente);
+        if (atributo.equals("metodoPagamento")) {
+            if (valor1.equals("banco")) {
+                vericaErrosMetodoDePagamento(banco, agencia, contaCorrente);
                 Pagamento pagamento = new Pagamento(banco);
 
                 empregado.getPagamento().setMetodoDePagamento("banco");
@@ -753,21 +743,21 @@ public class System {
         }
     }
 
-    public void vericaErrosMetodoDePagamento( String banco, String agencia, String contaCorrente){
-        if(banco.isEmpty()){
+    public void vericaErrosMetodoDePagamento(String banco, String agencia, String contaCorrente) {
+        if (banco.isEmpty()) {
             throw new NullPointerException("Banco nao pode ser nulo.");
-        }else if(agencia.isEmpty()){
+        } else if (agencia.isEmpty()) {
             throw new NullPointerException("Agencia nao pode ser nulo.");
         } else if (contaCorrente.isEmpty()) {
             throw new NullPointerException("Conta corrente nao pode ser nulo.");
         }
     }
 
-    public Sindicato getSindicato(String membro){
+    public Sindicato getSindicato(String membro) {
 
-        for(Map.Entry<String, Empregado> empregado : empregados.entrySet()){
-            if(empregado.getValue().getSindicalizado().getValor() == Boolean.TRUE){
-                if(empregado.getValue().getSindicalizado().getId().equals(membro)){
+        for (Map.Entry<String, Empregado> empregado : empregados.entrySet()) {
+            if (empregado.getValue().getSindicalizado().getValor() == Boolean.TRUE) {
+                if (empregado.getValue().getSindicalizado().getId().equals(membro)) {
                     return empregado.getValue().getSindicalizado();
                 }
             }
@@ -778,50 +768,48 @@ public class System {
     }
 
     public void lancaServico(String membro, String dataString, String valorString) throws HorasNulasException, DataInvalidaException, AtributoNumericoNegativoException, AtributoValorException, AtributoNumericoNaoNumericoException {
-        if(membro == null || membro.equals("")){
+        if (membro == null || membro.equals("")) {
             throw new NullPointerException("Identificacao do membro nao pode ser nula.");
         }
 
 
-        Sindicato sindicato =  getSindicato(membro);
+        Sindicato sindicato = getSindicato(membro);
         verificarErrosNumericosServico(valorString);
         LocalDate data = verifica_data_valida("data_cartao", dataString);
 
 
-
-        Servico servico = new Servico(data,valorString);
+        Servico servico = new Servico(data, valorString);
         sindicato.setListaServico(servico);
     }
 
     public String totalFolha(String dataString) throws DataInvalidaException {
         LocalDate data = verifica_data_valida("data_cartao", dataString);
         CalculoFolha calculoFolha = new CalculoFolha();
-        return calculoFolha.puxaFolha(data, this.empregados, this.cartoesDePontos);
+        return calculoFolha.puxaFolha(data, this.empregados, this.folhaDePontos);
     }
 
-    public void rodaFolha(String dataString, String saida) throws DataInvalidaException {
-        LocalDate data = verifica_data_valida("data_cartao", dataString);
-        CartaoDePonto cartaoDePonto = this.cartoesDePontos.get(data);
-
-
-        String nomeArquivo = "./ok/folha-" + saida;
-
-        try {
-            // Cria o diretório se ele não existir
-            File diretorio = new File("WePayU/ok");
-            if (!diretorio.exists()) {
-                diretorio.mkdirs();
-            }
-
-            // Cria o arquivo se ele não existir
-            File arquivo = new File(diretorio, nomeArquivo);
-            if (!arquivo.exists()) {
-                arquivo.createNewFile();
-            } else {
-
-            }
-        } catch (IOException e) {
-        }
-
-    }
+//    public void rodaFolha(String dataString, String saida) throws DataInvalidaException {
+//        LocalDate data = verifica_data_valida("data_cartao", dataString);
+//        FolhaDePonto cartaoDePonto = this.cartoesDePontos.get(data);
+//
+//
+//        String nomeArquivo = "./ok/folha-" + saida;
+//
+//        try {
+//            // Cria o diretório se ele não existir
+//            File diretorio = new File("WePayU/ok");
+//            if (!diretorio.exists()) {
+//                diretorio.mkdirs();
+//            }
+//
+//            // Cria o arquivo se ele não existir
+//            File arquivo = new File(diretorio, nomeArquivo);
+//            if (!arquivo.exists()) {
+//                arquivo.createNewFile();
+//            } else {
+//
+//            }
+//        } catch (IOException e) {
+//        }
+//    }
 }
