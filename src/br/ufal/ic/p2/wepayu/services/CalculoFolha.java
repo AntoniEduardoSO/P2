@@ -7,29 +7,44 @@ import br.ufal.ic.p2.wepayu.models.*;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.time.DayOfWeek;
 
 public class CalculoFolha {
     public  String puxaFolha(LocalDate data, Map<String, Empregado> empregados, Map<LocalDate, FolhaDePonto> folhaDePontos){
-        Double salario_bruto = 0.0;
+        List<Horista> horistaList = new LinkedList<>();
+        Double salario_bruto = 0.0, salarioBrutoHorista = 0.0, salarioBrutoAssalariado = 0.0, salarioBrutoComissionado = 0.0;
         String salario_bruto_string;
 
         FolhaDePonto folhaDePonto = new FolhaDePonto();
+        folhaDePontos.put(data, folhaDePonto);
 
         for (Map.Entry<String, Empregado> entry : empregados.entrySet()) {
             Empregado empregado = entry.getValue();
-            salario_bruto += puxaFolhaEmpregado(data, empregado);
+            if(empregado.getTipo().equals("horista")){
+                salarioBrutoHorista += puxaFolhaEmpregadoHorista(data,empregado,folhaDePontos,salarioBrutoHorista, horistaList);
+            } else if(empregado.getTipo().equals("assalariado")){
+                salarioBrutoAssalariado += puxaFolhaEmpregadoAssalariado(data,empregado);
+            } else if(empregado.getTipo().equals("comissionado")){
+                salarioBrutoComissionado += puxaFolhaEmpregadoComissionado(data, empregado);
+            }
+//            salario_bruto += puxaFolhaEmpregado(data, empregado, folhaDePontos, salarioBrutoHorista);
         }
 
-        salario_bruto_string = transformaSalarioBruto(salario_bruto);
+        salario_bruto_string = transformaSalarioBruto(salario_bruto + salarioBrutoHorista + salarioBrutoAssalariado + salarioBrutoComissionado);
 
 
         folhaDePonto.setSalarioBrutoTotal(salario_bruto_string);
-        folhaDePontos.put(data, folhaDePonto);
+
+        folhaDePontos.get(data).setSalarioBrutoHorista(salarioBrutoHorista);
+        folhaDePontos.get(data).setSalarioBrutoAssalariado(salarioBrutoAssalariado);
+        folhaDePontos.get(data).setSalarioBrutoComissinado(salarioBrutoComissionado);
+
+        folhaDePontos.get(data).setHoristaList(horistaList);
+
+
+
+
 
         return salario_bruto_string;
     }
@@ -56,13 +71,12 @@ public class CalculoFolha {
     }
 
 
-    public  Double puxaFolhaEmpregado(LocalDate data, Empregado empregado){
+    public  Double puxaFolhaEmpregado(LocalDate data, Empregado empregado, Map<LocalDate, FolhaDePonto> folhaDePontos, Double salarioBrutoHorista){
         Double salario_bruto = 0.0;
 
 
-        if(empregado.getTipo().equals("horista")){
-            salario_bruto += puxaFolhaEmpregadoHorista(data,empregado);
-        } else if(empregado.getTipo().equals("comissionado")){
+
+        if(empregado.getTipo().equals("comissionado")){
             salario_bruto += puxaFolhaEmpregadoComissionado(data,empregado);
         } else if(empregado.getTipo().equals("assalariado")){
             salario_bruto += puxaFolhaEmpregadoAssalariado(data, empregado);
@@ -81,70 +95,103 @@ public class CalculoFolha {
         return salario_bruto;
     }
 
-    public  Double puxaFolhaEmpregadoHorista(LocalDate data, Empregado empregado){
+    public  Double puxaFolhaEmpregadoHorista(LocalDate data, Empregado empregado, Map<LocalDate, FolhaDePonto> folhaDePontos, Double salarioTotalHorista, List<Horista> horistaList){
+
         Double salario_bruto = 0.0;
         Map<LocalDate, Double> cartoesPonto = empregado.getCartoesPonto();
-        Double horas_normais = 0.0, horas_extras = 0.0, horas_totais, salario, horas_atuais, descontos = 0.0;
+        Double horas_normais = 0.0, horas_extras = 0.0, horas_totais, salario, horas_atuais;
+        Double descontos = 0.0;
 
         LocalDate primeiro_contrato = puxaPrimeiroContratoHorista(cartoesPonto, data);
 
-        System.out.println("sindicato do omi: " + empregado.getNome() + " " + empregado.getSindicalizado().getValor());
-
-
-        for(LocalDate dataAtual = data; dataAtual.getDayOfMonth() != 0;  dataAtual = dataAtual.minusDays(1)){
-            if(dataAtual.getDayOfWeek() == DayOfWeek.FRIDAY && dataAtual != data){
-                break;
-            }
-
-            if (empregado.getCartoesPonto().containsKey(dataAtual)) {
-                horas_atuais = empregado.getCartoesPonto().get(dataAtual);
-
-                if(  horas_atuais > 8 ){
-                    horas_extras += horas_atuais - 8;
-                    horas_atuais -= horas_extras;
+        if(data.getDayOfWeek() == DayOfWeek.FRIDAY){
+            for(LocalDate dataAtual = data; dataAtual.getDayOfMonth() != 0;  dataAtual = dataAtual.minusDays(1)){
+                if(dataAtual.getDayOfWeek() == DayOfWeek.FRIDAY && dataAtual != data){
+                    break;
                 }
 
-                horas_normais += horas_atuais;
+                if (empregado.getCartoesPonto().containsKey(dataAtual)) {
+                    horas_atuais = empregado.getCartoesPonto().get(dataAtual);
 
-//                System.out.println("data: " + dataAtual + " teste: " + empregado.getCartoesPonto().get(dataAtual) + "horas_normais = " + horas_normais + " horas_extras = " + horas_extras);
+                    if(  horas_atuais > 8 ){
+                        horas_extras += horas_atuais - 8;
+                        horas_atuais -= horas_extras;
+                    }
+
+                    horas_normais += horas_atuais;
+                }
             }
 
-//            if(empregado.getSindicalizado().getValor() == Boolean.TRUE){
-//                descontos += Double.parseDouble(empregado.getSindicalizado().getTaxaSindical());
-//
-////                for(int i = 0; i < empregado.getSindicalizado().getLancaServico().size(); i++){
-////                    descontos +=  Double.parseDouble(empregado.getSindicalizado().getLancaServico().get(i).getValor());
-////                }
-//
-//            }
+            salario = Double.parseDouble(empregado.getSalario().replaceAll(",","."));
+            salario_bruto += (horas_normais  * salario) + (horas_extras * (salario * 1.5));
 
+
+            if(empregado.getSindicalizado().getValor() ==  Boolean.TRUE){
+                descontos += getDescontosSindicato(salario_bruto, empregado, data, folhaDePontos);
+            }
         }
-
-        Sindicato sindicato = empregado.getSindicalizado();
-
-//        if(data.getDayOfWeek() == DayOfWeek.FRIDAY){
-//            descontos += Double.parseDouble(sindicato.lancaServico(data.minusDays(7), data));
-//        }
-
-
-
 
         String horas_normais_str =   horas_normais.toString().replaceAll("\\.0","");
         String horas_extras_str = horas_extras.toString().replaceAll("\\.0","");
-
-
-        salario = Double.parseDouble(empregado.getSalario().replaceAll(",","."));
-        salario_bruto += (horas_normais  * salario) + (horas_extras * (salario * 1.5));
-
         String salario_bruto_str = transformaSalarioBruto(salario_bruto);
+        String descontos_str = transformaSalarioBruto(descontos);
+        String salario_liquido_str = transformaSalarioBruto(salario_bruto - descontos);
+        String metodo = getMetodoPagamento(empregado);
 
 
-//        Horista horista = new Horista(empregado.getNome(), horas_normais_str , horas_extras_str, salario_bruto_str, , (salario_bruto), empregado.getPagamento().getMetodoDePagamento() );
 
 
-        System.out.println("empregado: " + empregado.getNome() + " horas: " + (horas_normais + horas_extras) +  " descontos: " + descontos + " da data: " + data.toString());
+        Horista horista = new Horista(empregado.getNome(), horas_normais_str , horas_extras_str, salario_bruto_str, descontos_str , salario_liquido_str, metodo );
+
+        horistaList.add(horista);
 
         return salario_bruto;
+    }
+
+    private String getMetodoPagamento(Empregado empregado) {
+
+        String metodo = empregado.getPagamento().getMetodoDePagamento();
+
+        if(metodo.equals("emMaos")){
+            metodo = "Em maos";
+        } else if(metodo.equals("banco")){
+            metodo = empregado.getPagamento().getBanco() + ", Ag. " + empregado.getPagamento().getAgencia() + " CC " + empregado.getPagamento().getContaCorrente();
+        } else if(metodo.equals("correios")){
+            metodo = "Correios, " + empregado.getEndereco();
+        }
+
+
+        return metodo;
+    }
+
+    private Double getDescontosSindicato(Double salario_bruto,Empregado empregado, LocalDate data, Map<LocalDate, FolhaDePonto> folhaDePontos ) {
+        Double descontos = 0.0;
+
+        if(salario_bruto > 0) {
+            Integer j = -5;
+            Sindicato sindicato = empregado.getSindicalizado();
+
+
+
+            for (Map.Entry<LocalDate, FolhaDePonto> entry : folhaDePontos.entrySet()) {
+                if(entry.getValue().getSalarioBrutoHorista() != null){
+                    if(entry.getValue().getSalarioBrutoHorista() <= 0){
+                        j+=1;
+                    }
+                }
+            }
+
+            System.out.println(j);
+
+            if(j == 1){
+                j*=7;
+            }
+
+            descontos += ((Double.parseDouble(sindicato.getTaxaSindical().replaceAll(",", ".")) * (j) ) );
+            descontos += Double.parseDouble(sindicato.lancaServico(data.minusDays(6), data).replaceAll(",", "."));
+        }
+
+        return descontos;
     }
 
     private  LocalDate puxaPrimeiroContratoHorista(Map<LocalDate, Double> cartoesPonto, LocalDate filtro) {

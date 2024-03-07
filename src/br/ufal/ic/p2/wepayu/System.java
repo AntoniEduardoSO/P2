@@ -1,8 +1,6 @@
 package br.ufal.ic.p2.wepayu;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -10,7 +8,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.io.File;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -788,28 +785,247 @@ public class System {
         return calculoFolha.puxaFolha(data, this.empregados, this.folhaDePontos);
     }
 
-//    public void rodaFolha(String dataString, String saida) throws DataInvalidaException {
-//        LocalDate data = verifica_data_valida("data_cartao", dataString);
-//        FolhaDePonto cartaoDePonto = this.cartoesDePontos.get(data);
-//
-//
-//        String nomeArquivo = "./ok/folha-" + saida;
-//
-//        try {
-//            // Cria o diretório se ele não existir
-//            File diretorio = new File("WePayU/ok");
-//            if (!diretorio.exists()) {
-//                diretorio.mkdirs();
-//            }
-//
-//            // Cria o arquivo se ele não existir
-//            File arquivo = new File(diretorio, nomeArquivo);
-//            if (!arquivo.exists()) {
-//                arquivo.createNewFile();
-//            } else {
-//
-//            }
-//        } catch (IOException e) {
-//        }
-//    }
+    public void rodaFolha(String dataString, String saida) throws DataInvalidaException {
+        Printar print = new Printar();
+
+        LocalDate data = verifica_data_valida("data_cartao", dataString);
+        FolhaDePonto folhaDePonto = this.folhaDePontos.get(data);
+
+        criaArquivoFolha(data,  saida, folhaDePonto);
+    }
+
+
+    public void criaArquivoFolha(LocalDate data, String saida, FolhaDePonto folhaDePonto){
+
+        String nomeArquivo = saida;
+
+
+        try {
+            // Cria o diretório se ele não existir
+            File diretorio = new File("P2");
+            if (!diretorio.exists()) {
+                diretorio.mkdirs();
+            }
+
+            // Cria o arquivo se ele não existir
+            File arquivo = new File(nomeArquivo);
+            if (!arquivo.exists()) {
+                arquivo.createNewFile();
+
+            } else {
+                arquivo.delete();
+                arquivo.createNewFile();
+            }
+
+            FileWriter fileWriter = new FileWriter(arquivo);
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+
+            escreveArquivoFolha(bufferedWriter, folhaDePonto, data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void escreveArquivoFolha(BufferedWriter bufferedWriter, FolhaDePonto folhaDePonto, LocalDate data) throws IOException {
+        bufferedWriter.write("FOLHA DE PAGAMENTO DO DIA " + data.toString() + "\n");
+        bufferedWriter.write("====================================\n\n");
+
+        escreveArquivoHorista(data, bufferedWriter, folhaDePonto);
+        escreveArquivoAssalariado(data,bufferedWriter,folhaDePonto);
+        escreveArquivoComissinado(data, bufferedWriter, folhaDePonto);
+
+        bufferedWriter.write("TOTAL FOLHA: " + folhaDePonto.getSalarioBrutoTotal() + "\n");
+
+
+        bufferedWriter.close();
+    }
+
+    private void escreveArquivoComissinado(LocalDate data, BufferedWriter bufferedWriter, FolhaDePonto folhaDePonto) throws IOException {
+        List<Comissionado> comissionadoList = folhaDePonto.getComissionadoList();
+
+        bufferedWriter.write("===============================================================================================================================\n");
+        bufferedWriter.write("===================== COMISSIONADOS ===========================================================================================\n");
+        bufferedWriter.write("===============================================================================================================================\n");
+        bufferedWriter.write("Nome                  Fixo     Vendas   Comissao Salario Bruto Descontos Salario Liquido Metodo\n");
+        bufferedWriter.write("===================== ======== ======== ======== ============= ========= =============== ======================================\n");
+
+
+        if(folhaDePonto.getSalarioBrutoComissinado() <= 0 ){
+            bufferedWriter.write("\nTOTAL COMISSIONADOS       0,00     0,00     0,00          0,00      0,00            0,00\n\n");
+        }
+    }
+
+
+    private void escreveArquivoHorista(LocalDate data, BufferedWriter bufferedWriter, FolhaDePonto folhaDePonto) throws IOException {
+        List<Horista> horistaList = folhaDePonto.getHoristaList();
+        String horas_totais, horas_extras;
+
+
+        bufferedWriter.write("===============================================================================================================================\n");
+        bufferedWriter.write("===================== HORISTAS ================================================================================================\n");
+        bufferedWriter.write("===============================================================================================================================\n");
+        bufferedWriter.write("Nome                                 Horas Extra Salario Bruto Descontos Salario Liquido Metodo\n");
+        bufferedWriter.write("==================================== ===== ===== ============= ========= =============== ======================================\n");
+
+        Comparator<Horista> comparador = new Comparator<Horista>() {
+            @Override
+            public int compare(Horista horista1, Horista horista2) {
+                return horista1.getNome().compareTo(horista2.getNome());
+            }
+        };
+
+        Collections.sort(horistaList, comparador);
+        if(data.plusDays(1).getDayOfMonth() == 1){
+            bufferedWriter.write("\nTOTAL HORISTAS                           0     0          0,00      0,00            0,00\n");
+            bufferedWriter.write("\n");
+        }
+
+        else{
+            for(int i = 0; i < horistaList.size();i++){
+                Horista horista = horistaList.get(i);
+                bufferedWriter.write(horista.getNome());
+                encherDeEspaco(bufferedWriter, 37 - horista.getNome().length());
+                encherDeEspaco(bufferedWriter, 5 - horista.getHoras().length());
+                bufferedWriter.write(horista.getHoras());
+                encherDeEspaco(bufferedWriter, 6 - horista.getExtra().length());
+                bufferedWriter.write(horista.getExtra());
+                encherDeEspaco(bufferedWriter, 14 - horista.getSalarioBruto().length());
+                bufferedWriter.write(horista.getSalarioBruto());
+                encherDeEspaco(bufferedWriter, 10 - horista.getDescontos().length());
+                bufferedWriter.write(horista.getDescontos());
+                encherDeEspaco(bufferedWriter, 16 - horista.getSalarioLiquido().length());
+                bufferedWriter.write(horista.getSalarioLiquido());
+                bufferedWriter.write(" ");
+                bufferedWriter.write(horista.getMetodo());
+                bufferedWriter.write("\n");
+            }
+
+            horas_totais = getHorasTotais(horistaList);
+            horas_extras = getHorasExtras(horistaList);
+            String salario_bruto_total = getSalarioBrutoHorista(horistaList);
+            String desconto_total = getDescontoHorista(horistaList);
+            Double salario_liquido_total = Double.parseDouble(salario_bruto_total.replaceAll(",", "\\.")) - Double.parseDouble(desconto_total.replaceAll(",","\\."));
+            String salario_liquido_total_str = salario_liquido_total.toString().replaceAll("\\.", ",");
+            if(salario_liquido_total_str.matches(".*,[0-9]$")){
+                salario_liquido_total_str+="0";
+            }
+
+            bufferedWriter.write("\n");
+            bufferedWriter.write("TOTAL HORISTAS");
+            encherDeEspaco(bufferedWriter, 37-14);
+            encherDeEspaco(bufferedWriter,  5 - horas_totais.length());
+            bufferedWriter.write(horas_totais);
+            encherDeEspaco(bufferedWriter, 6 - horas_extras.length());
+            bufferedWriter.write(horas_extras);
+            encherDeEspaco(bufferedWriter, 14 - salario_bruto_total.length());
+            bufferedWriter.write(salario_bruto_total);
+            encherDeEspaco(bufferedWriter, 10 - desconto_total.length());
+            bufferedWriter.write(desconto_total);
+            encherDeEspaco(bufferedWriter, 16 - salario_liquido_total_str.length());
+            bufferedWriter.write(salario_liquido_total_str);
+            bufferedWriter.write("\n\n");
+        }
+
+    }
+
+    private String getDescontoHorista(List<Horista> horistaList){
+        Double desconto_total = 0.0;
+        for(int i = 0; i < horistaList.size();i++){
+            desconto_total+= Double.parseDouble(horistaList.get(i).getDescontos().replaceAll(",", "\\."));
+        }
+
+        String desconto_total_str = desconto_total.toString().replaceAll("\\.", ",");
+
+        if(desconto_total_str.matches(".*,[0-9]$")){
+            desconto_total_str += 0;
+        }
+
+        return desconto_total_str;
+    }
+
+    private String getSalarioBrutoHorista(List<Horista> horistaList) {
+        Double salario_bruto_total = 0.0;
+        for(int i = 0; i < horistaList.size();i++){
+            salario_bruto_total += Double.parseDouble(horistaList.get(i).getSalarioBruto().replaceAll(",","\\."));
+        }
+
+        String salario_bruto_total_str = salario_bruto_total.toString().replaceAll("\\.",",");
+
+        if (salario_bruto_total_str.matches(".*,[0-9]$")) {
+            salario_bruto_total_str += "0";
+        }
+
+        return salario_bruto_total_str;
+    }
+
+    private String getHorasTotais(List<Horista> horistaList) {
+        Double horas_normais = 0.0;
+
+        for( int i = 0; i < horistaList.size(); i++){
+            horas_normais += Double.parseDouble(horistaList.get(i).getHoras());
+        }
+
+
+        String horas_normais_str = horas_normais.toString();
+
+        if(horas_normais_str.contains(".0")){
+            horas_normais_str =  horas_normais_str.replace(".0","");
+        } else{
+            horas_normais_str =  horas_normais_str.replaceAll("\\.", ",");
+        }
+
+
+        return horas_normais_str;
+    }
+
+    private String getHorasExtras(List<Horista> horistaList) {
+        Double horas_extras = 0.0;
+
+        for( int i = 0; i < horistaList.size(); i++){
+            horas_extras += Double.parseDouble(horistaList.get(i).getExtra());
+        }
+
+
+        String horas_extras_str = horas_extras.toString();
+
+        if(horas_extras_str.contains(".0")){
+            horas_extras_str =  horas_extras_str.replace(".0","");
+        } else{
+            horas_extras_str =  horas_extras_str.replaceAll("\\.", ",");
+        }
+
+
+        return horas_extras_str;
+    }
+
+    private void escreveArquivoAssalariado(LocalDate data, BufferedWriter bufferedWriter, FolhaDePonto folhaDePonto) throws IOException {
+        List<Assalariado> assalariadoList = folhaDePonto.getAssalariadoList();
+        bufferedWriter.write("===============================================================================================================================\n");
+        bufferedWriter.write("===================== ASSALARIADOS ============================================================================================\n");
+        bufferedWriter.write("===============================================================================================================================\n");
+        bufferedWriter.write("Nome                                             Salario Bruto Descontos Salario Liquido Metodo\n");
+        bufferedWriter.write("================================================ ============= ========= =============== ======================================\n\n");
+
+
+        if(data.plusDays(1).getDayOfMonth() == 1){
+            for(int i = 0; i < assalariadoList.size();i++){
+                Assalariado assalariado = assalariadoList.get(i);
+                bufferedWriter.write(assalariado.getNome() + "\n");
+            }
+
+        } else {
+            bufferedWriter.write("TOTAL ASSALARIADOS                                        0,00      0,00            0,00");
+            bufferedWriter.write("\n\n");
+        }
+    }
+
+    private void encherDeEspaco(BufferedWriter bufferedWriter, int length) throws IOException {
+        for(int i =0; i < length; i ++){
+            bufferedWriter.write(" ");
+        }
+    }
+
+
 }
