@@ -854,7 +854,101 @@ public class System {
 
         if(folhaDePonto.getSalarioBrutoComissinado() <= 0 ){
             bufferedWriter.write("\nTOTAL COMISSIONADOS       0,00     0,00     0,00          0,00      0,00            0,00\n\n");
+        } else{
+            Double fixo_total = 0.0, vendas_total = 0.0, comissao_total = 0.0, salario_bruto_total = 0.0, salario_liquido_total = 0.0, descontos_total = 0.0;
+            Comparator<Comissionado> comparador = new Comparator<Comissionado>() {
+                @Override
+                public int compare(Comissionado comissionado1, Comissionado comissionado2) {
+                    return comissionado1.getNome().compareTo(comissionado2.getNome());
+                }
+            };
+
+            Collections.sort(comissionadoList, comparador);
+
+            for(int i = 0; i < comissionadoList.size();i++){
+                Comissionado comissionado = comissionadoList.get(i);
+                bufferedWriter.write(comissionado.getNome());
+                encherDeEspaco(bufferedWriter, 22 - comissionado.getNome().length());
+                encherDeEspaco(bufferedWriter, 8 - comissionado.getFixo().length());
+                bufferedWriter.write(comissionado.getFixo());
+                encherDeEspaco(bufferedWriter, 9 - comissionado.getVendas().length());
+                bufferedWriter.write(comissionado.getVendas());
+                encherDeEspaco(bufferedWriter,9 - comissionado.getComissao().length());
+                bufferedWriter.write(comissionado.getComissao());
+                encherDeEspaco(bufferedWriter, 14 - comissionado.getSalarioBruto().length());
+                bufferedWriter.write(comissionado.getSalarioBruto());
+                encherDeEspaco(bufferedWriter, 10 - comissionado.getDescontos().length());
+                bufferedWriter.write(comissionado.getDescontos());
+                encherDeEspaco(bufferedWriter, 16 - comissionado.getSalarioLiquido().length());
+                bufferedWriter.write(comissionado.getSalarioLiquido());
+                bufferedWriter.write(" ");
+                bufferedWriter.write(comissionado.getMetodo());
+
+                fixo_total += Double.parseDouble(comissionado.getFixo().replaceAll(",","\\."));
+                vendas_total += Double.parseDouble(comissionado.getVendas().replaceAll(",","\\."));
+                comissao_total += Double.parseDouble(comissionado.getComissao().replaceAll(",","\\."));
+                salario_bruto_total += Double.parseDouble(comissionado.getSalarioBruto().replaceAll(",","\\."));
+                salario_liquido_total += Double.parseDouble(comissionado.getSalarioLiquido().replaceAll(",","\\."));
+                descontos_total += Double.parseDouble(comissionado.getDescontos().replaceAll(",","\\."));
+
+                bufferedWriter.write("\n");
+            }
+
+            java.text.DecimalFormat df = new java.text.DecimalFormat("#.##");
+            String numeroFormatadoBruto = df.format(salario_bruto_total).replaceAll("\\.", ",");
+            String numeroFormatadoLiquido = df.format(salario_liquido_total).replaceAll("\\.", ",");
+            String numeroFormatadoVendas = df.format(vendas_total).replaceAll("\\.", ",");
+
+
+            String fixo_total_str = fixo_total.toString().replaceAll("\\.", ",");
+            String comissao_total_str = comissao_total.toString().replaceAll("\\.", ",");
+            String descontos_total_str = descontos_total.toString().replaceAll("\\.", ",");
+
+            numeroFormatadoBruto = getErrosComissaoTotalValor(numeroFormatadoBruto);
+            numeroFormatadoLiquido = getErrosComissaoTotalValor(numeroFormatadoLiquido);
+            numeroFormatadoVendas = getErrosComissaoTotalValor(numeroFormatadoVendas);
+            fixo_total_str =  getErrosComissaoTotal(fixo_total_str);
+            comissao_total_str =  getErrosComissaoTotal(comissao_total_str);
+            descontos_total_str =  getErrosComissaoTotal(descontos_total_str);
+
+
+            bufferedWriter.write("\n");
+            bufferedWriter.write("TOTAL COMISSIONADOS");
+            encherDeEspaco(bufferedWriter, 22 - 19);
+            encherDeEspaco(bufferedWriter, 8 - fixo_total_str.length());
+            bufferedWriter.write(fixo_total_str);
+            encherDeEspaco(bufferedWriter, 9 - numeroFormatadoVendas.length());
+            bufferedWriter.write(numeroFormatadoVendas);
+            encherDeEspaco(bufferedWriter,9 - comissao_total_str.length());
+            bufferedWriter.write(comissao_total_str);
+            encherDeEspaco(bufferedWriter, 14 - numeroFormatadoBruto.length());
+            bufferedWriter.write(numeroFormatadoBruto);
+            encherDeEspaco(bufferedWriter, 10 - descontos_total_str.length());
+            bufferedWriter.write(descontos_total_str);
+            encherDeEspaco(bufferedWriter, 16 - numeroFormatadoLiquido.length());
+            bufferedWriter.write(numeroFormatadoLiquido);
+            bufferedWriter.write("\n\n");
         }
+    }
+
+
+    private String getErrosComissaoTotalValor(String valor) {
+        String[] partes = valor.split(",");
+        if(!valor.contains(",")){
+            valor+=",00";
+        } else if(partes.length == 2 && partes[1].length() == 1){
+            valor +="0";
+        }
+
+        return valor;
+    }
+    private String getErrosComissaoTotal(String valor) {
+        String[] partes = valor.split(",");
+        if (partes.length == 2 && partes[1].length() == 1) {
+            valor +=0;
+        }
+
+        return valor;
     }
 
 
@@ -1006,16 +1100,67 @@ public class System {
         bufferedWriter.write("===================== ASSALARIADOS ============================================================================================\n");
         bufferedWriter.write("===============================================================================================================================\n");
         bufferedWriter.write("Nome                                             Salario Bruto Descontos Salario Liquido Metodo\n");
-        bufferedWriter.write("================================================ ============= ========= =============== ======================================\n\n");
-
+        bufferedWriter.write("================================================ ============= ========= =============== ======================================\n");
 
         if(data.plusDays(1).getDayOfMonth() == 1){
+            Comparator<Assalariado> comparador = new Comparator<Assalariado>() {
+                @Override
+                public int compare(Assalariado assalariado1, Assalariado assalariado2) {
+                    return assalariado1.getNome().compareTo(assalariado2.getNome());
+                }
+            };
+
+            Collections.sort(assalariadoList, comparador);
+
+            Double salario_bruto_total = 0.0, descontos_total = 0.0, salario_liquido_total = 0.0;
             for(int i = 0; i < assalariadoList.size();i++){
                 Assalariado assalariado = assalariadoList.get(i);
-                bufferedWriter.write(assalariado.getNome() + "\n");
+                bufferedWriter.write(assalariado.getNome());
+                encherDeEspaco(bufferedWriter, 49 - assalariado.getNome().length());
+                encherDeEspaco(bufferedWriter, 13 - assalariado.getSalarioBruto().length());
+                bufferedWriter.write(assalariado.getSalarioBruto());
+                encherDeEspaco(bufferedWriter, 10 - assalariado.getDescontos().length());
+                bufferedWriter.write(assalariado.getDescontos());
+                encherDeEspaco(bufferedWriter, 16 - assalariado.getSalarioLiquido().length());
+                bufferedWriter.write(assalariado.getSalarioLiquido());
+                bufferedWriter.write(" " + assalariado.getMetodo());
+
+                bufferedWriter.write("\n");
+
+                salario_bruto_total += Double.parseDouble(assalariado.getSalarioBruto().replaceAll(",","\\."));
+                descontos_total += Double.parseDouble(assalariado.getDescontos().replaceAll(",","\\."));
+                salario_liquido_total += Double.parseDouble(assalariado.getSalarioLiquido().replaceAll(",","\\."));
             }
 
+            String salario_bruto_total_str = salario_bruto_total.toString().replaceAll("\\.",",");
+            String descontos_total_str = descontos_total.toString().replaceAll("\\.",",");
+            String salario_liquido_total_str = salario_liquido_total.toString().replaceAll("\\.",",");
+
+            if(salario_bruto_total_str.matches(".*,[0-9]$")){
+                salario_bruto_total_str+="0";
+            }
+
+            if(descontos_total_str.matches(".*,[0-9]$")){
+                descontos_total_str+="0";
+            }
+
+            if(salario_liquido_total_str.matches(".*,[0-9]$")){
+                salario_liquido_total_str+="0";
+            }
+
+            bufferedWriter.write("\n");
+            bufferedWriter.write("TOTAL ASSALARIADOS");
+            encherDeEspaco(bufferedWriter, 49 - 18);
+            encherDeEspaco(bufferedWriter, 13 - salario_bruto_total_str.length());
+            bufferedWriter.write(salario_bruto_total_str);
+            encherDeEspaco(bufferedWriter, 10 - descontos_total_str.length());
+            bufferedWriter.write(descontos_total_str);
+            encherDeEspaco(bufferedWriter, 16 - salario_liquido_total_str.length());
+            bufferedWriter.write(salario_liquido_total_str);
+            bufferedWriter.write("\n\n");
+
         } else {
+            bufferedWriter.write("\n");
             bufferedWriter.write("TOTAL ASSALARIADOS                                        0,00      0,00            0,00");
             bufferedWriter.write("\n\n");
         }

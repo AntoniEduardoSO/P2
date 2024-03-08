@@ -214,8 +214,7 @@ expect 0,00 totalFolha data=15/2/2005
 expect 0,00 totalFolha data=16/2/2005
 expect 0,00 totalFolha data=17/2/2005
 expect 0,00 totalFolha data=18/2/2005
-rodaFolha data=18/2/2005 saida=folha-2005
--02-18.txt
+rodaFolha data=18/2/2005 saida=folha-2005-02-18.txt
 equalFiles file1=ok/folha-2005-02-18.txt file2=folha-2005-02-18.txt
 expect 0,00 totalFolha data=19/2/2005
 expect 0,00 totalFolha data=20/2/2005

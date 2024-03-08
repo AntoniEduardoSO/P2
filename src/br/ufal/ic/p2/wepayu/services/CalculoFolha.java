@@ -7,12 +7,15 @@ import br.ufal.ic.p2.wepayu.models.*;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.time.temporal.ChronoField;
 import java.util.*;
 import java.time.DayOfWeek;
 
 public class CalculoFolha {
     public  String puxaFolha(LocalDate data, Map<String, Empregado> empregados, Map<LocalDate, FolhaDePonto> folhaDePontos){
         List<Horista> horistaList = new LinkedList<>();
+        List<Assalariado> assalariadoList = new LinkedList<>();
+        List<Comissionado> comissionadoList = new LinkedList<>();
         Double salario_bruto = 0.0, salarioBrutoHorista = 0.0, salarioBrutoAssalariado = 0.0, salarioBrutoComissionado = 0.0;
         String salario_bruto_string;
 
@@ -24,16 +27,13 @@ public class CalculoFolha {
             if(empregado.getTipo().equals("horista")){
                 salarioBrutoHorista += puxaFolhaEmpregadoHorista(data,empregado,folhaDePontos,salarioBrutoHorista, horistaList);
             } else if(empregado.getTipo().equals("assalariado")){
-                salarioBrutoAssalariado += puxaFolhaEmpregadoAssalariado(data,empregado);
+                salarioBrutoAssalariado += puxaFolhaEmpregadoAssalariado(data,empregado, assalariadoList);
             } else if(empregado.getTipo().equals("comissionado")){
-                salarioBrutoComissionado += puxaFolhaEmpregadoComissionado(data, empregado);
+                salarioBrutoComissionado += puxaFolhaEmpregadoComissionado(data, empregado, comissionadoList);
             }
-//            salario_bruto += puxaFolhaEmpregado(data, empregado, folhaDePontos, salarioBrutoHorista);
         }
 
         salario_bruto_string = transformaSalarioBruto(salario_bruto + salarioBrutoHorista + salarioBrutoAssalariado + salarioBrutoComissionado);
-
-
         folhaDePonto.setSalarioBrutoTotal(salario_bruto_string);
 
         folhaDePontos.get(data).setSalarioBrutoHorista(salarioBrutoHorista);
@@ -41,10 +41,8 @@ public class CalculoFolha {
         folhaDePontos.get(data).setSalarioBrutoComissinado(salarioBrutoComissionado);
 
         folhaDePontos.get(data).setHoristaList(horistaList);
-
-
-
-
+        folhaDePontos.get(data).setAssalariadoList(assalariadoList);
+        folhaDePontos.get(data).setComissionadoList(comissionadoList);
 
         return salario_bruto_string;
     }
@@ -70,27 +68,58 @@ public class CalculoFolha {
         return Boolean.TRUE;
     }
 
-
-    public  Double puxaFolhaEmpregado(LocalDate data, Empregado empregado, Map<LocalDate, FolhaDePonto> folhaDePontos, Double salarioBrutoHorista){
-        Double salario_bruto = 0.0;
-
-
-
-        if(empregado.getTipo().equals("comissionado")){
-            salario_bruto += puxaFolhaEmpregadoComissionado(data,empregado);
-        } else if(empregado.getTipo().equals("assalariado")){
-            salario_bruto += puxaFolhaEmpregadoAssalariado(data, empregado);
-        }
-
-        return salario_bruto;
-    }
-
-    private Double puxaFolhaEmpregadoAssalariado(LocalDate data, Empregado empregado) {
-        Double salario_bruto = 0.0;
+    private Double puxaFolhaEmpregadoAssalariado(LocalDate data, Empregado empregado, List<Assalariado> assalariadoList) {
+        Double salario_bruto = 0.0, descontos = 0.0;
 
         if(data.plusDays(1).getDayOfMonth() == 1) {
+            LocalDate ultimoDiaMesAnterior = data.minusMonths(1).withDayOfMonth(31);
+            Sindicato sindicato = empregado.getSindicalizado();
+
             salario_bruto += Double.parseDouble(empregado.getSalario().replaceAll(",", "."));
+
+
+            if(empregado.getSindicalizado().getValor() == Boolean.TRUE){
+                Double taxa_sindical = Double.parseDouble(empregado.getSindicalizado().getTaxaSindical().replaceAll(",","."));
+
+                for(LocalDate dataAtual = data; dataAtual.get(ChronoField.MONTH_OF_YEAR) != ultimoDiaMesAnterior.get(ChronoField.MONTH_OF_YEAR) ; dataAtual = dataAtual.minusDays(1) ){
+                    descontos += taxa_sindical;
+                }
+
+                Double servico = Double.parseDouble(sindicato.lancaServico(ultimoDiaMesAnterior, data).replaceAll(",", "."));
+                descontos+=servico;
+
+            }
+
+
         }
+
+        Double salario_liquido = (salario_bruto - descontos);
+
+
+        String salario_liquido_str = salario_liquido.toString().replaceAll("\\.",",");
+        String descontos_str = descontos.toString().replaceAll("\\.", ",");
+        String salario_bruto_str = salario_bruto.toString().replaceAll("\\.",",");
+
+
+        if(salario_liquido_str.matches(".*,[0-9]$")){
+            salario_liquido_str+=0;
+        }
+
+        if(descontos_str.matches(".*,[0-9]$")){
+            descontos_str +=0;
+        }
+
+        if(salario_bruto_str.matches(".*,[0-9]$")){
+            salario_bruto_str +=0;
+        }
+
+        String metodo = getMetodoPagamento(empregado);
+
+
+        Assalariado assalariado = new Assalariado(empregado.getNome(), salario_bruto_str, descontos_str, salario_liquido_str, metodo);
+        assalariadoList.add(assalariado);
+
+
 
         return salario_bruto;
     }
@@ -181,8 +210,6 @@ public class CalculoFolha {
                 }
             }
 
-            System.out.println(j);
-
             if(j == 1){
                 j*=7;
             }
@@ -210,8 +237,8 @@ public class CalculoFolha {
         return dataMaisAntiga;
     }
 
-    private Double puxaFolhaEmpregadoComissionado(LocalDate data, Empregado empregado){
-        Double salario_bruto = 0.0, salario;
+    private Double puxaFolhaEmpregadoComissionado(LocalDate data, Empregado empregado, List<Comissionado> comissionadoList){
+        Double salario_bruto = 0.0, salario, descontos = 0.0, taxa_servico = 0.0;
 
         if(verificaDataPagamentoComissionado(data) == Boolean.TRUE){
             Double fixo = ((Double.parseDouble(empregado.getSalario().replaceAll(",", ".")) * 12) / 52 ) * 2;
@@ -225,11 +252,55 @@ public class CalculoFolha {
             fixo = transformaValores(fixo);
             comissao = transformaValores(comissao);
 
+
             salario_bruto += comissao + fixo;
 
-//            System.out.println("empregado: " + empregado.getNome() + " fixo: " + fixo + " salario: " + empregado.getSalario() + " vendas;  " + vendas + " Comissao: " + comissao );
-        }
 
+            if(empregado.getSindicalizado().getValor() == Boolean.TRUE){
+                LocalDate dataLimite = data.minusDays(14);
+                Sindicato sindicato = empregado.getSindicalizado();
+                for(LocalDate dataAtual = data; dataAtual.isAfter(dataLimite);dataAtual = dataAtual.minusDays(1) ){
+                    descontos += Double.parseDouble(sindicato.getTaxaSindical().replaceAll(",","\\."));
+                }
+
+                descontos += Double.parseDouble(sindicato.lancaServico(dataLimite, data).replaceAll(",","\\."));
+            }
+
+            Double salario_liquido = salario_bruto - descontos;
+
+            java.text.DecimalFormat df = new java.text.DecimalFormat("#.##");
+            String numeroFormatadoBruto = df.format(salario_bruto).replaceAll("\\.", ",");
+            String numeroFormatadoLiquido = df.format(salario_liquido).replaceAll("\\.", ",");
+
+
+            String descontos_str = descontos.toString().replaceAll("\\.",",");
+            String fixo_str = fixo.toString().replaceAll("\\.",",");
+            String comissao_str = comissao.toString().replaceAll("\\.",",");
+            String vendas_str = vendas.toString().replaceAll("\\.",",");
+            String metodo = getMetodoPagamento(empregado);
+
+            if(!numeroFormatadoBruto.contains(",")){
+                numeroFormatadoBruto+=",00";
+            } if(numeroFormatadoBruto.matches(".*,[0-9]$")){
+                numeroFormatadoBruto+="0";
+            }if(!numeroFormatadoLiquido.contains(",")){
+                numeroFormatadoLiquido+=",00";
+            } if(numeroFormatadoLiquido.matches(".*,[0-9]$")){
+              numeroFormatadoLiquido +="0";
+            } if(descontos_str.matches(".*,[0-9]$")){
+                descontos_str+="0";
+            } if(fixo_str.matches(".*,[0-9]$")){
+                fixo_str+="0";
+            } if(comissao_str.matches(".*,[0-9]$")){
+                comissao_str+="0";
+            } if(vendas_str.matches(".*,[0-9]$")){
+                vendas_str+="0";
+            }
+
+
+            Comissionado comissionado = new Comissionado(empregado.getNome(), fixo_str, vendas_str, comissao_str, numeroFormatadoBruto, descontos_str, numeroFormatadoLiquido, metodo);
+            comissionadoList.add(comissionado);
+        }
 
 
 
