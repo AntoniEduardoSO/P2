@@ -9,12 +9,18 @@ public class Pagamento {
 
     String metodoDePagamento;
 
+    String agendaDePagamento;
+
     public Pagamento(String valor1){
         this.valor1 = valor1;
     }
 
     public Pagamento() {
 
+    }
+
+    public String getAgendaDePagamento() {
+        return agendaDePagamento;
     }
 
     public String getBanco() {
@@ -56,5 +62,9 @@ public class Pagamento {
 
     public void setValor1(String valor1) {
         this.valor1 = valor1;
+    }
+
+    public void setAgendaDePagamento(String agendaDePagamento) {
+        this.agendaDePagamento = agendaDePagamento;
     }
 }

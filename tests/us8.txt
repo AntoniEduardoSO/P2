@@ -28,6 +28,7 @@ lancaVenda emp=${id2} data=1/1/2005 valor=800
 rodaFolha data=11/2/2005 saida=folha-2005-02-11.txt
 zerarSistema
 
+
 # TESTES DE UNDO
 expect 0 getNumeroDeEmpregados
 # undo de zerarSistema

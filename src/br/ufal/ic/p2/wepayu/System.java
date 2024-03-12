@@ -258,6 +258,11 @@ public class System {
 
             this.empregados.put(id, empregado);
             EmpregadoServices.verificarIndicesEmpregado(empregado, this.empregados, empregado.getId());
+            if(tipo.equals("horista")){
+                empregado.getPagamento().setAgendaDePagamento("semanal 5");
+            } else if(tipo.equals("assalariado")){
+                empregado.getPagamento().setAgendaDePagamento("mensal $");
+            }
 
             return id;
 
@@ -281,6 +286,7 @@ public class System {
 
             this.empregados.put(id, empregado);
             EmpregadoServices.verificarIndicesEmpregado(empregado, this.empregados, empregado.getId());
+            empregado.getPagamento().setAgendaDePagamento("semanal 2 5");
 
 
             return id;
@@ -535,7 +541,21 @@ public class System {
 
     public LocalDate verifica_data_valida(String identificacao, String dataString) throws DataInvalidaException {
         Printar print = new Printar();
+        String mensagemErro;
         String formato = "";
+        String[] dataVetor = dataString.split("/");
+        Integer dia = Integer.parseInt(dataVetor[0]);
+
+
+        
+        if(dia > 31 && dataVetor[1].equals("1")){
+            mensagemErro = mensagemErrorData(identificacao);
+            throw new DataInvalidaException(mensagemErro);
+        } else if(dia > 28 &&  dataVetor[1].equals("2")){
+            mensagemErro = mensagemErrorData(identificacao);
+            throw new DataInvalidaException(mensagemErro);
+        }
+        
 
         int contadorBarras = 0;
 
@@ -578,22 +598,56 @@ public class System {
 
             return data;
         } catch (DateTimeParseException e) {
-            String mensagemErro;
-            switch (identificacao) {
-                case "data_inicial":
-                    mensagemErro = "Data inicial invalida.";
-                    break;
-                case "data_final":
-                    mensagemErro = "Data final invalida.";
-                    break;
-                case "data_cartao":
-                    mensagemErro = "Data invalida.";
-                    break;
-                default:
-                    mensagemErro = "Data invalida.";
-                    break;
-            }
+            mensagemErro = mensagemErrorData(identificacao);
             throw new DataInvalidaException(mensagemErro);
+        }
+    }
+
+    public String mensagemErrorData(String identificacao) throws DataInvalidaException {
+        String mensagemErro;
+        switch (identificacao) {
+            case "data_inicial":
+                mensagemErro = "Data inicial invalida.";
+                break;
+            case "data_final":
+                mensagemErro = "Data final invalida.";
+                break;
+            case "data_cartao":
+                mensagemErro = "Data invalida.";
+                break;
+            default:
+                mensagemErro = "Data invalida.";
+                break;
+        }
+        return mensagemErro;
+    }
+
+    public void alteraEmpregado(String id, String atributo, String valor, String comissao) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
+        Empregado empregado = getEmpregado(id);
+
+        if (valor.equals("abc")) {
+            throw new NullPointerException("Tipo nao aplicavel");
+        }
+
+
+        switch (atributo) {
+
+            case "tipo":
+                empregado.setTipo(valor);
+
+
+                if (valor.equals("comissionado")) {
+                    empregado.setComissao(comissao);
+                } else if (valor.equals("horista")) {
+                    empregado.setSalario(comissao);
+                } else if (valor.equals("assalariado")) {
+                    empregado.setSalario(valor);
+                }
+
+                break;
+
+            default:
+                throw new NullPointerException("Tipo invalido.");
         }
     }
 
@@ -602,6 +656,14 @@ public class System {
 
 
         switch (atributo) {
+            case "agendaPagamento":
+                if(!valor.equals("mensal $") || !valor.equals("semanal 2 5") || !valor.equals("semanal 5")){
+                    throw new NullPointerException("Agenda de pagamento nao esta disponivel");
+                }
+
+                empregado.getPagamento().setAgendaDePagamento(valor);
+                break;
+
             case "sindicalizado":
                 if (!valor.equals("false") || valor.equals("true")) {
                     throw new NullPointerException("Valor deve ser true ou false.");
@@ -665,37 +727,9 @@ public class System {
                 break;
 
 
+
             default:
                 throw new NullPointerException("Atributo nao existe.");
-        }
-    }
-
-    public void alteraEmpregado(String id, String atributo, String valor, String comissao) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
-        Empregado empregado = getEmpregado(id);
-
-        if (valor.equals("abc")) {
-            throw new NullPointerException("Tipo nao aplicavel");
-        }
-
-
-        switch (atributo) {
-
-            case "tipo":
-                empregado.setTipo(valor);
-
-
-                if (valor.equals("comissionado")) {
-                    empregado.setComissao(comissao);
-                } else if (valor.equals("horista")) {
-                    empregado.setSalario(comissao);
-                } else if (valor.equals("assalariado")) {
-                    empregado.setSalario(valor);
-                }
-
-                break;
-
-            default:
-                throw new NullPointerException("Tipo invalido.");
         }
     }
 
@@ -789,9 +823,10 @@ public class System {
         Printar print = new Printar();
 
         LocalDate data = verifica_data_valida("data_cartao", dataString);
-        FolhaDePonto folhaDePonto = this.folhaDePontos.get(data);
-
-        criaArquivoFolha(data,  saida, folhaDePonto);
+        if(!this.folhaDePontos.isEmpty()){
+            FolhaDePonto folhaDePonto = this.folhaDePontos.get(data);
+            criaArquivoFolha(data,  saida, folhaDePonto);
+        }
     }
 
 
