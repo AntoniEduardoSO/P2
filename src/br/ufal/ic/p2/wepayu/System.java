@@ -41,11 +41,13 @@ public class System {
     private Boolean funcao = Boolean.FALSE;
 
     private Map<LocalDate, FolhaDePonto> folhaDePontos = new LinkedHashMap<>();
+    List<String> agendaDePagamentos = new LinkedList<>();
 
 
     public void zerarSistema() {
         this.file.delete();
         this.empregados = new LinkedHashMap<>();
+        this.agendaDePagamentos = new LinkedList<>();
     }
 
     public void encerrarSistema() {
@@ -651,86 +653,97 @@ public class System {
         }
     }
 
-    public void alteraEmpregado(String id, String atributo, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
+    public void alteraEmpregado(String id, String atributo, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException, AgendaInvalidaException {
         Empregado empregado = getEmpregado(id);
         if(atributo.equals("agendaPagamento")){
-            if(!valor.equals("mensal $") && !valor.equals("semanal 2 5") && !valor.equals("semanal 5")){
-                throw new NullPointerException("Agenda de pagamento nao esta disponivel");
+            java.lang.System.out.println("TO NO IF PORRA");
+            if(agendaDePagamentos.isEmpty()){
+                if(!valor.equals("mensal $") && !valor.equals("semanal 5") && !valor.equals("semanal 2 5")){
+                    throw new AgendaInvalidaException("Agenda de pagamento nao esta disponivel");
+                }
+                empregado.getPagamento().setAgendaDePagamento(valor);
+            } else{
+                for(int i = 0; i < agendaDePagamentos.size();i++){
+                    if(agendaDePagamentos.get(i).equals(valor)){
+                        empregado.getPagamento().setAgendaDePagamento(valor);
+                        return;
+                    }
+                }
+
+                throw new AgendaInvalidaException("Agenda de pagamento nao esta disponivel");
             }
+        }
+        else{
+            switch (atributo) {
+                case "sindicalizado":
+                    if (!valor.equals("false") || valor.equals("true")) {
+                        throw new NullPointerException("Valor deve ser true ou false.");
+                    }
+                    empregado.getSindicalizado().setValor(Boolean.parseBoolean(valor));
+                    break;
 
-            empregado.getPagamento().setAgendaDePagamento(valor);
-            return;
+                case "nome":
+                    if (valor.isEmpty()) {
+                        throw new NullPointerException("Nome nao pode ser nulo.");
+                    }
+                    empregado.setNome(valor);
+                    break;
+
+                case "salario":
+                    if (valor.isEmpty()) {
+                        throw new NullPointerException("Salario nao pode ser nulo.");
+                    }
+
+                    verificarErrosNumericos(valor + ",00");
+                    empregado.setSalario(valor);
+                    break;
+
+                case "tipo":
+                    if (valor.equals("abc")) {
+                        throw new NullPointerException("Tipo invalido.");
+                    }
+                    empregado.setTipo(valor);
+                    break;
+
+                case "comissao":
+                    if (valor.isEmpty()) {
+                        throw new NullPointerException("Comissao nao pode ser nula.");
+                    }
+                    if (!empregado.getTipo().equals("comissionado")) {
+                        throw new NullPointerException("Empregado nao eh comissionado.");
+                    }
+
+                    empregado.setComissao(valor);
+                    break;
+
+                case "endereco":
+                    if (valor.isEmpty()) {
+                        throw new NullPointerException("Endereco nao pode ser nulo.");
+                    }
+                    empregado.setEndereco(valor);
+                    break;
+
+                case "metodoPagamento":
+                    if (valor.equals("abc")) {
+                        throw new NullPointerException("Metodo de pagamento invalido.");
+                    }
+                    empregado.getPagamento().setMetodoDePagamento(valor);
+                    break;
+
+                case "contaCorrente":
+                    if (valor.isEmpty()) {
+                        throw new NullPointerException("Conta corrente nao pode ser nulo.");
+                    }
+                    empregado.getPagamento().setContaCorrente(valor);
+                    break;
+
+
+
+                default:
+                    throw new NullPointerException("Atributo nao existe.");
+            }
         }
 
-
-        switch (atributo) {
-            case "sindicalizado":
-                if (!valor.equals("false") || valor.equals("true")) {
-                    throw new NullPointerException("Valor deve ser true ou false.");
-                }
-                empregado.getSindicalizado().setValor(Boolean.parseBoolean(valor));
-                break;
-
-            case "nome":
-                if (valor.isEmpty()) {
-                    throw new NullPointerException("Nome nao pode ser nulo.");
-                }
-                empregado.setNome(valor);
-                break;
-
-            case "salario":
-                if (valor.isEmpty()) {
-                    throw new NullPointerException("Salario nao pode ser nulo.");
-                }
-
-                verificarErrosNumericos(valor + ",00");
-                empregado.setSalario(valor);
-                break;
-
-            case "tipo":
-                if (valor.equals("abc")) {
-                    throw new NullPointerException("Tipo invalido.");
-                }
-                empregado.setTipo(valor);
-                break;
-
-            case "comissao":
-                if (valor.isEmpty()) {
-                    throw new NullPointerException("Comissao nao pode ser nula.");
-                }
-                if (!empregado.getTipo().equals("comissionado")) {
-                    throw new NullPointerException("Empregado nao eh comissionado.");
-                }
-
-                empregado.setComissao(valor);
-                break;
-
-            case "endereco":
-                if (valor.isEmpty()) {
-                    throw new NullPointerException("Endereco nao pode ser nulo.");
-                }
-                empregado.setEndereco(valor);
-                break;
-
-            case "metodoPagamento":
-                if (valor.equals("abc")) {
-                    throw new NullPointerException("Metodo de pagamento invalido.");
-                }
-                empregado.getPagamento().setMetodoDePagamento(valor);
-                break;
-
-            case "contaCorrente":
-                if (valor.isEmpty()) {
-                    throw new NullPointerException("Conta corrente nao pode ser nulo.");
-                }
-                empregado.getPagamento().setContaCorrente(valor);
-                break;
-
-
-
-            default:
-                throw new NullPointerException("Atributo nao existe.");
-        }
     }
 
     public void alteraEmpregado(String id, String atributo, boolean valor, String idSindicato, String taxaSindicalString) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException, AtributoValorException {
@@ -1208,4 +1221,7 @@ public class System {
     }
 
 
+    public void criarAgendaDePagamentos(String descricao) throws AgendaInvalidaException {
+        AgendaDePagamentoCalculo.main(descricao, this.agendaDePagamentos);
+    }
 }

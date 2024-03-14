@@ -68,7 +68,7 @@ public class Facade {
         return this.system.getVendasRealizadas(id,dataInicial,dataFinal);
     }
 
-    public void alteraEmpregado(String id, String atributo, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
+    public void alteraEmpregado(String id, String atributo, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException, AgendaInvalidaException {
         this.system.alteraEmpregado(id,atributo,valor);
     }
     public void alteraEmpregado(String id, String atributo, boolean valor, String idSindicato, String taxaSindical) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException, AtributoValorException {
@@ -97,5 +97,9 @@ public class Facade {
 
     public void rodaFolha(String data, String saida) throws DataInvalidaException{
         this.system.rodaFolha(data, saida);
+    }
+
+    public void criarAgendaDePagamentos(String descricao) throws AgendaInvalidaException {
+        this.system.criarAgendaDePagamentos(descricao);
     }
 }
