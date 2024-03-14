@@ -64,6 +64,8 @@ public class Empregado {
 
     public String getAtributo(String atributo) throws  AtributoNaoExisteException {
         switch (atributo){
+            case "agendaPagamento":
+                return this.getPagamento().getAgendaDePagamento();
             case "nome":
                 return this.getNome();
 

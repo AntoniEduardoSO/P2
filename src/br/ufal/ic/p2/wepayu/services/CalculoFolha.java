@@ -1,7 +1,6 @@
 package br.ufal.ic.p2.wepayu.services;
 
 
-//import br.ufal.ic.p2.wepayu.System;
 import br.ufal.ic.p2.wepayu.models.*;
 
 import java.math.BigDecimal;
@@ -71,7 +70,28 @@ public class CalculoFolha {
     private Double puxaFolhaEmpregadoAssalariado(LocalDate data, Empregado empregado, List<Assalariado> assalariadoList) {
         Double salario_bruto = 0.0, descontos = 0.0;
 
-        if(data.plusDays(1).getDayOfMonth() == 1) {
+        if(empregado.getPagamento().getAgendaDePagamento().equals("semanal 5")){
+            if(data.getDayOfWeek() == DayOfWeek.FRIDAY){
+                salario_bruto += (Double.parseDouble( empregado.getSalario().replaceAll(",","\\.")) * 12) / 52;
+            }
+        }
+
+        else if(empregado.getPagamento().getAgendaDePagamento().equals("semanal 2 5")){
+            if(verificaDataPagamentoComissionado(data)){
+                Double salario_bruto_nao_formatado = (Double.parseDouble( empregado.getSalario().replaceAll(",","\\.")) * 6) / 13;
+                String salario_bruto_nao_formatado_string = salario_bruto_nao_formatado.toString().replaceAll("\\.", ",");
+
+                String[] valores =  salario_bruto_nao_formatado_string.split(",");
+
+
+
+
+                salario_bruto = Double.parseDouble(valores[0] + "." + valores[1].substring(0,2));
+
+            }
+        }
+
+        else if(data.plusDays(1).getDayOfMonth() == 1) {
             LocalDate ultimoDiaMesAnterior = data.minusMonths(1).withDayOfMonth(31);
             Sindicato sindicato = empregado.getSindicalizado();
 
@@ -130,10 +150,30 @@ public class CalculoFolha {
         Map<LocalDate, Double> cartoesPonto = empregado.getCartoesPonto();
         Double horas_normais = 0.0, horas_extras = 0.0, horas_totais, salario, horas_atuais;
         Double descontos = 0.0;
-
         LocalDate primeiro_contrato = puxaPrimeiroContratoHorista(cartoesPonto, data);
 
-        if(data.getDayOfWeek() == DayOfWeek.FRIDAY){
+        if(empregado.getPagamento().getAgendaDePagamento().equals("mensal $")){
+            if(data.plusDays(1).getDayOfMonth() == 1){
+                LocalDate data_inicial = data.minusMonths(1);
+                System.out.println("data inicial: " + data_inicial + " data final: " + data);
+                horas_normais += calculoDeHorasFolhaEmpregadoHoristaHorasNormais(empregado, data_inicial, data);
+                horas_extras += calculoDeHorasFolhaEmpregadoHoristaHorasExtras(empregado, data_inicial, data);
+            }
+
+
+            System.out.println("horas normais = " + horas_normais);
+
+        }
+
+        else if(empregado.getPagamento().getAgendaDePagamento().equals("semanal 2 5")){
+            if(verificaDataPagamentoComissionado(data)){
+                LocalDate data_inicial = data.minusDays(14);
+                horas_normais += calculoDeHorasFolhaEmpregadoHoristaHorasNormais(empregado, data_inicial, data);
+                horas_extras += calculoDeHorasFolhaEmpregadoHoristaHorasExtras(empregado, data_inicial, data);
+            }
+        }
+
+        else if(data.getDayOfWeek() == DayOfWeek.FRIDAY){
             for(LocalDate dataAtual = data; dataAtual.getDayOfMonth() != 0;  dataAtual = dataAtual.minusDays(1)){
                 if(dataAtual.getDayOfWeek() == DayOfWeek.FRIDAY && dataAtual != data){
                     break;
@@ -151,15 +191,14 @@ public class CalculoFolha {
                 }
             }
 
-            salario = Double.parseDouble(empregado.getSalario().replaceAll(",","."));
-            salario_bruto += (horas_normais  * salario) + (horas_extras * (salario * 1.5));
-
-
             if(empregado.getSindicalizado().getValor() ==  Boolean.TRUE){
                 descontos += getDescontosSindicato(salario_bruto, empregado, data, folhaDePontos);
             }
         }
 
+
+        salario = Double.parseDouble(empregado.getSalario().replaceAll(",","."));
+        salario_bruto += (horas_normais  * salario) + (horas_extras * (salario * 1.5));
         String horas_normais_str =   horas_normais.toString().replaceAll("\\.0","");
         String horas_extras_str = horas_extras.toString().replaceAll("\\.0","");
         String salario_bruto_str = transformaSalarioBruto(salario_bruto);
@@ -175,6 +214,42 @@ public class CalculoFolha {
         horistaList.add(horista);
 
         return salario_bruto;
+    }
+
+    private Double calculoDeHorasFolhaEmpregadoHoristaHorasExtras(Empregado empregado, LocalDate data_inicial, LocalDate data_final) {
+        Double horas_extras = 0.0;
+
+        for(; data_final.isAfter(data_inicial);data_final =  data_final.minusDays(1)){
+            if(empregado.getCartoesPonto().containsKey(data_final)){
+                Double horas_atuais = empregado.getCartoesPonto().get(data_final);
+
+                if(horas_atuais > 8){
+                    horas_extras += (horas_atuais - 8);
+                }
+            }
+        }
+
+        return horas_extras;
+    }
+
+    private Double calculoDeHorasFolhaEmpregadoHoristaHorasNormais(Empregado empregado, LocalDate data_inicial, LocalDate data_final){
+        Double horas_normais = 0.0;
+
+
+        for(; data_final.isAfter(data_inicial);data_final =  data_final.minusDays(1)){
+            if(empregado.getCartoesPonto().containsKey(data_final)){
+                Double horas_atuais = empregado.getCartoesPonto().get(data_final);
+
+                if(horas_atuais > 8){
+                     horas_normais += 8;
+                } else{
+                   horas_normais +=horas_atuais;
+                }
+            }
+        }
+
+
+        return horas_normais;
     }
 
     private String getMetodoPagamento(Empregado empregado) {
@@ -240,7 +315,63 @@ public class CalculoFolha {
     private Double puxaFolhaEmpregadoComissionado(LocalDate data, Empregado empregado, List<Comissionado> comissionadoList){
         Double salario_bruto = 0.0, salario, descontos = 0.0, taxa_servico = 0.0;
 
-        if(verificaDataPagamentoComissionado(data) == Boolean.TRUE){
+        if(empregado.getPagamento().getAgendaDePagamento().equals("mensal $")){
+            if(data.plusDays(1).getDayOfMonth() == 1){
+                Double fixo = Double.parseDouble(empregado.getSalario().replaceAll(",", "."));
+
+                Double vendas = 0.0;
+
+                List<Vendas> listaVendas = empregado.getLancaVendas();
+
+                for(LocalDate dataAtual = data.minusMonths(1); dataAtual.isBefore(data); dataAtual = dataAtual.plusDays(1)){
+                    for (Vendas venda : listaVendas) {
+                        if (venda.getData().isEqual(dataAtual)) {
+                            vendas += venda.getValor();
+                        }
+                    }
+                }
+
+                System.out.println("vendas: " + vendas);
+
+                Double comissao = Double.parseDouble(empregado.getComissao().replaceAll(",","\\.")) * vendas;
+
+                salario_bruto += comissao + fixo;
+
+
+
+
+
+
+            }
+
+        }
+
+        else if(empregado.getPagamento().getAgendaDePagamento().equals("semanal 5")){
+            if(data.getDayOfWeek() == DayOfWeek.FRIDAY){
+                Double fixo_nao_formatado = (Double.parseDouble(empregado.getSalario().replaceAll(",","\\.")) * 12) / 52;
+                String valores[] = fixo_nao_formatado.toString().replaceAll("\\.",",").split(",");
+
+                Double fixo = Double.parseDouble(valores[0] + "." + valores[1].substring(0,2));
+
+                List<Vendas> listaVendas = empregado.getLancaVendas();
+                Double vendas = 0.0;
+
+                for(LocalDate dataAtual = data.minusDays(7); dataAtual.isBefore(data); dataAtual = dataAtual.plusDays(1)){
+                    for (Vendas venda : listaVendas) {
+                        if (venda.getData().isEqual(dataAtual)) {
+                            vendas += venda.getValor();
+                        }
+                    }
+                }
+
+
+                Double comissao = Double.parseDouble(empregado.getComissao().replaceAll(",","\\.")) * vendas;
+
+                salario_bruto += comissao + fixo;
+            }
+        }
+
+        else if(verificaDataPagamentoComissionado(data) == Boolean.TRUE){
             Double fixo = ((Double.parseDouble(empregado.getSalario().replaceAll(",", ".")) * 12) / 52 ) * 2;
             Double vendas = 0.0;
 

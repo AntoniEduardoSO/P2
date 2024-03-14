@@ -41,7 +41,6 @@ expecterror "Agenda de pagamento nao esta disponivel" alteraEmpregado emp=${id1}
 expecterror "Agenda de pagamento nao esta disponivel" alteraEmpregado emp=${id1} \
 	atributo=agendaPagamento valor1="todo dia"
 
-
 # testando se agendas de pagamento modificadas funcionam corretamente
 # primeiro caso: empregado horista que querem receber por mes
 zerarSistema
@@ -78,6 +77,7 @@ expect 0,00 totalFolha data=21/1/2005
 expect 312,00 totalFolha data=28/1/2005
 expect 0,00 totalFolha data=31/1/2005
 
+
 # terceiro caso: empregado assalariado que quer receber semanalmente (faz o calculo das 52 semanas no ano)
 # valor devido = salario menos taxas, etc. (nao testado)
 zerarSistema
@@ -91,6 +91,7 @@ expect 646,15 totalFolha data=21/1/2005
 expect 646,15 totalFolha data=28/1/2005
 expect 0,00 totalFolha data=31/1/2005
 
+
 # quarto caso: empregado assalariado que quer receber a cada duas semanas (faz o calculo das 52 semanas, paga a cada duas)
 zerarSistema
 id2=criarEmpregado nome="Beta Dois Assalariado" endereco="Rua Beta, 2 - Esparta" \
@@ -98,10 +99,11 @@ id2=criarEmpregado nome="Beta Dois Assalariado" endereco="Rua Beta, 2 - Esparta"
 alteraEmpregado emp=${id2} atributo=agendaPagamento valor1="semanal 2 5"
 expect 0,00 totalFolha data=1/1/2005
 expect 0,00 totalFolha data=7/1/2005
-expect 1292,30totalFolha data=14/1/2005
+expect 1292,30 totalFolha data=14/1/2005
 expect 0,00 totalFolha data=21/1/2005
 expect 1292,30 totalFolha data=28/1/2005
 expect 0,00 totalFolha data=31/1/2005
+
 
 # quinto caso: empregado comissionado que quer receber mensalmente
 zerarSistema
@@ -117,6 +119,9 @@ expect 0,00 totalFolha data=14/1/2005
 expect 0,00 totalFolha data=21/1/2005
 expect 0,00 totalFolha data=28/1/2005
 expect 1366,00 totalFolha data=31/1/2005
+
+
+
 
 # sexto caso: empregado comissionado que quer semanalmente
 zerarSistema

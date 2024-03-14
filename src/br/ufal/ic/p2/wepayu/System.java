@@ -653,17 +653,17 @@ public class System {
 
     public void alteraEmpregado(String id, String atributo, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException {
         Empregado empregado = getEmpregado(id);
+        if(atributo.equals("agendaPagamento")){
+            if(!valor.equals("mensal $") && !valor.equals("semanal 2 5") && !valor.equals("semanal 5")){
+                throw new NullPointerException("Agenda de pagamento nao esta disponivel");
+            }
+
+            empregado.getPagamento().setAgendaDePagamento(valor);
+            return;
+        }
 
 
         switch (atributo) {
-            case "agendaPagamento":
-                if(!valor.equals("mensal $") || !valor.equals("semanal 2 5") || !valor.equals("semanal 5")){
-                    throw new NullPointerException("Agenda de pagamento nao esta disponivel");
-                }
-
-                empregado.getPagamento().setAgendaDePagamento(valor);
-                break;
-
             case "sindicalizado":
                 if (!valor.equals("false") || valor.equals("true")) {
                     throw new NullPointerException("Valor deve ser true ou false.");
