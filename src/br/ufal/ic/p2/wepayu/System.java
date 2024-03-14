@@ -9,8 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import org.w3c.dom.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -29,8 +28,6 @@ import br.ufal.ic.p2.wepayu.services.*;
 import br.ufal.ic.p2.wepayu.Exception.VerificarErros.*;
 import br.ufal.ic.p2.wepayu.Exception.VerificarErroCartaoDePonto.*;
 import br.ufal.ic.p2.wepayu.Exception.VerificarErrosLancaVendas.*;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 
@@ -74,6 +71,18 @@ public class System {
                 empregadoElement.setAttribute("comissao", empregado.getComissao());
                 empregadoElement.setAttribute("indice", empregado.getIndice().toString());
 
+
+                if(!agendaDePagamentos.isEmpty()){
+                    Element agendaPagamentoElemnt = doc.createElement("agendaPagamento");
+                    for(int i = 0; i < this.agendaDePagamentos.size();i++){
+                        agendaPagamentoElemnt.setAttribute("descricao" + i, agendaDePagamentos.get(i));
+                    }
+
+                    empregadoElement.appendChild(agendaPagamentoElemnt);
+                }
+
+
+
                 Element sindicatoElement = doc.createElement("sindicato");
                 if (empregado.getSindicalizado().getValor() == Boolean.TRUE) {
                     sindicatoElement.setAttribute("sindicato_id", empregado.getSindicalizado().getId());
@@ -93,6 +102,7 @@ public class System {
                 pagamentoElemnt.setAttribute("banco", String.valueOf(empregado.getPagamento().getBanco()));
                 pagamentoElemnt.setAttribute("agencia", String.valueOf(empregado.getPagamento().getAgencia()));
                 pagamentoElemnt.setAttribute("contaCorrente", String.valueOf(empregado.getPagamento().getContaCorrente()));
+                pagamentoElemnt.setAttribute("agendaPagamento", String.valueOf(empregado.getPagamento().getAgendaDePagamento()));
                 empregadoElement.appendChild(pagamentoElemnt);
 
 
@@ -154,7 +164,6 @@ public class System {
 
                 for (int i = 0; i < empregadoNodes.getLength(); i++) {
                     Node empregadoNode = empregadoNodes.item(i);
-
                     if (empregadoNode.getNodeType() == Node.ELEMENT_NODE) {
                         Element empregadoElement = (Element) empregadoNode;
 
@@ -177,7 +186,16 @@ public class System {
                             if (child.getNodeType() == Node.ELEMENT_NODE) {
                                 Element childElement = (Element) child;
                                 String tagName = childElement.getTagName();
-                                if (tagName.equals("sindicato")) {
+                                if(tagName.equals("agendaPagamento")){
+
+                                    // String descricao = childElement.getAttributes();
+//                                    java.lang.System.out.println("teste: " + childElement.get);
+//                                    java.lang.System.out.println("descricao: " + descricao);
+
+//                                    this.agendaDePagamentos.add(descricao);
+                                }
+
+                                else if (tagName.equals("sindicato")) {
                                     String sindicatoId = childElement.getAttribute("sindicato_id");
                                     String valor = childElement.getAttribute("valor");
                                     String taxaSindical = childElement.getAttribute("taxaSindical");
@@ -193,12 +211,14 @@ public class System {
                                     String agencia = childElement.getAttribute("agencia");
                                     String contaCorrente = childElement.getAttribute("contaCorrente");
                                     String metodo = childElement.getAttribute("metodo");
+                                    String agendaPagamento = childElement.getAttribute("agendaPagamento");
 
                                     empregado.getPagamento().setValor1(valor1);
                                     empregado.getPagamento().setBanco(banco);
                                     empregado.getPagamento().setAgencia(agencia);
                                     empregado.getPagamento().setContaCorrente(contaCorrente);
                                     empregado.getPagamento().setMetodoDePagamento(metodo);
+                                    empregado.getPagamento().setAgendaDePagamento(agendaPagamento);
 
 
                                 } else if (tagName.equals("cartaoPonto")) {
