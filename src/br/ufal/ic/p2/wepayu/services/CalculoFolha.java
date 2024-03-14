@@ -185,21 +185,14 @@ public class CalculoFolha {
         LocalDate primeiro_contrato = puxaPrimeiroContratoHorista(cartoesPonto, data);
 
         if(empregado.getPagamento().getAgendaDePagamento().equals("mensal $")){
-            System.out.println("TO NO IF MENSAL");
             if(data.plusDays(1).getDayOfMonth() == 1){
                 LocalDate data_inicial = data.minusMonths(1);
-                System.out.println("data inicial: " + data_inicial + " data final: " + data);
                 horas_normais += calculoDeHorasFolhaEmpregadoHoristaHorasNormais(empregado, data_inicial, data);
                 horas_extras += calculoDeHorasFolhaEmpregadoHoristaHorasExtras(empregado, data_inicial, data);
             }
-
-
-            System.out.println("horas normais = " + horas_normais);
-
         }
 
         else if(empregado.getPagamento().getAgendaDePagamento().equals("semanal 2 5")){
-            System.out.println("TO NO IF semanal 2 5");
             if(verificaDataPagamentoComissionado(data)){
                 LocalDate data_inicial = data.minusDays(14);
                 horas_normais += calculoDeHorasFolhaEmpregadoHoristaHorasNormais(empregado, data_inicial, data);
@@ -230,10 +223,11 @@ public class CalculoFolha {
             }
 
             if(empregado.getSindicalizado().getValor() ==  Boolean.TRUE){
-                descontos += getDescontosSindicato(salario_bruto, empregado, data, folhaDePontos);
-            }
+                if(horas_normais > 0){
+                    descontos += getDescontosSindicato(horas_normais,empregado,data,folhaDePontos);
 
-            System.out.println("data: " + data + " descontos: " + descontos);
+                }
+            }
 
         }
 
@@ -318,13 +312,8 @@ public class CalculoFolha {
             Integer j = -5;
             Sindicato sindicato = empregado.getSindicalizado();
 
-
-
-
             for (Map.Entry<LocalDate, FolhaDePonto> entry : folhaDePontos.entrySet()) {
-                System.out.println("entry: " + entry.getValue().getSalarioBrutoTotal());
                 if(entry.getValue().getSalarioBrutoHorista() != null){
-                    System.out.println("DENTRO DO IF DO FOR");
                     if(entry.getValue().getSalarioBrutoHorista() <= 0){
                         j+=1;
                     }
@@ -339,7 +328,6 @@ public class CalculoFolha {
             descontos += Double.parseDouble(sindicato.lancaServico(data.minusDays(6), data).replaceAll(",", "."));
         }
 
-        System.out.println(descontos);
 
         return descontos;
     }
@@ -379,7 +367,6 @@ public class CalculoFolha {
                     }
                 }
 
-                System.out.println("vendas: " + vendas);
 
                 Double comissao = Double.parseDouble(empregado.getComissao().replaceAll(",","\\.")) * vendas;
 

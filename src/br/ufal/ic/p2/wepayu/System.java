@@ -187,12 +187,10 @@ public class System {
                                 Element childElement = (Element) child;
                                 String tagName = childElement.getTagName();
                                 if(tagName.equals("agendaPagamento")){
-
-                                    // String descricao = childElement.getAttributes();
-//                                    java.lang.System.out.println("teste: " + childElement.get);
-//                                    java.lang.System.out.println("descricao: " + descricao);
-
-//                                    this.agendaDePagamentos.add(descricao);
+                                    for(int k= 0; k < 5;k++){
+                                        String descricao = childElement.getAttribute("descricao" + k);
+                                        this.agendaDePagamentos.add(descricao);
+                                    }
                                 }
 
                                 else if (tagName.equals("sindicato")) {
@@ -676,7 +674,6 @@ public class System {
     public void alteraEmpregado(String id, String atributo, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNuloException, EmpregadoNaoExisteNomeException, AtributoNumericoNegativoException, AtributoNumericoNaoNumericoException, AgendaInvalidaException {
         Empregado empregado = getEmpregado(id);
         if(atributo.equals("agendaPagamento")){
-            java.lang.System.out.println("TO NO IF PORRA");
             if(agendaDePagamentos.isEmpty()){
                 if(!valor.equals("mensal $") && !valor.equals("semanal 5") && !valor.equals("semanal 2 5")){
                     throw new AgendaInvalidaException("Agenda de pagamento nao esta disponivel");
@@ -1242,6 +1239,31 @@ public class System {
 
 
     public void criarAgendaDePagamentos(String descricao) throws AgendaInvalidaException {
+        if (file.exists()) {
+            try {
+                recuperarDadosEmpregado();
+            } catch (HorasNulasException e) {
+                throw new RuntimeException(e);
+            } catch (EmpregadoNaoExisteException e) {
+                throw new RuntimeException(e);
+            } catch (IdEmpregadoNuloException e) {
+                throw new RuntimeException(e);
+            } catch (TipoInvalidoCartaoDePontoException e) {
+                throw new RuntimeException(e);
+            } catch (DataInvalidaException e) {
+                throw new RuntimeException(e);
+            } catch (TipoInvalidoLancaVendasException e) {
+                throw new RuntimeException(e);
+            } catch (EmpregadoNaoExisteNomeException e) {
+                throw new RuntimeException(e);
+            } catch (AtributoNumericoNegativoException e) {
+                throw new RuntimeException(e);
+            } catch (AtributoNumericoNaoNumericoException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
         AgendaDePagamentoCalculo.main(descricao, this.agendaDePagamentos);
     }
 }
